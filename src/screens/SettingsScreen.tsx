@@ -4,7 +4,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { ScreenWrapper } from '../components/ScreenWrapper';
-import { colors } from '../theme/colors';
+import { useTheme } from '../context/ThemeContext';
 import { typography } from '../theme/typography';
 import { layout } from '../theme/layout';
 import { RootStackParamList } from '../navigation/types';
@@ -17,6 +17,8 @@ import { BlurView } from 'expo-blur';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Settings'>;
 
+// ... (EditProfileModal and ChangePasswordModal remain largely same but accessing colors from hook would be better. For now keeping them as is might break them if I remove 'colors' export, but I kept 'colors' export for compat. I will update them to use hook for correctness.)
+
 interface EditProfileModalProps {
     visible: boolean;
     onClose: () => void;
@@ -26,7 +28,7 @@ interface EditProfileModalProps {
 }
 
 const EditProfileModal: React.FC<EditProfileModalProps> = ({ visible, onClose, initialName, initialAvatar, onSave }) => {
-    // ... (existing implementation)
+    const { colors, isDark } = useTheme();
     const [name, setName] = useState(initialName);
     const [avatar, setAvatar] = useState(initialAvatar);
     const [loading, setLoading] = useState(false);
@@ -98,11 +100,11 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ visible, onClose, i
                 behavior={Platform.OS === "ios" ? "padding" : "height"}
                 style={styles.modalOverlay}
             >
-                <BlurView intensity={20} tint="dark" style={StyleSheet.absoluteFill} />
+                <BlurView intensity={20} tint={isDark ? "dark" : "light"} style={StyleSheet.absoluteFill} />
                 <View style={styles.modalContainer}>
                     <GlassView style={styles.modalContent} intensity={95}>
                         <View style={styles.modalHeader}>
-                            <Text style={styles.modalTitle}>Edit Profile</Text>
+                            <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Edit Profile</Text>
                             <TouchableOpacity onPress={onClose} disabled={loading}>
                                 <Ionicons name="close" size={24} color={colors.textPrimary} />
                             </TouchableOpacity>
@@ -111,16 +113,16 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ visible, onClose, i
                         <View style={styles.avatarContainer}>
                             <TouchableOpacity onPress={pickImage} disabled={loading}>
                                 <Avatar source={{ uri: avatar }} size={100} />
-                                <View style={styles.editAvatarBadge}>
+                                <View style={[styles.editAvatarBadge, { backgroundColor: colors.primary, borderColor: colors.surface }]}>
                                     <Ionicons name="camera" size={20} color="#FFF" />
                                 </View>
                             </TouchableOpacity>
                         </View>
 
                         <View style={styles.inputContainer}>
-                            <Text style={styles.label}>Full Name</Text>
+                            <Text style={[styles.label, { color: colors.textSecondary }]}>Full Name</Text>
                             <TextInput
-                                style={styles.input}
+                                style={[styles.input, { backgroundColor: colors.background, color: colors.textPrimary, borderColor: colors.border }]}
                                 value={name}
                                 onChangeText={setName}
                                 placeholder="Enter your full name"
@@ -149,6 +151,7 @@ interface ChangePasswordModalProps {
 }
 
 const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ visible, onClose, onSave }) => {
+    const { colors, isDark } = useTheme();
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [loading, setLoading] = useState(false);
@@ -188,20 +191,20 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ visible, onCl
                 behavior={Platform.OS === "ios" ? "padding" : "height"}
                 style={styles.modalOverlay}
             >
-                <BlurView intensity={20} tint="dark" style={StyleSheet.absoluteFill} />
+                <BlurView intensity={20} tint={isDark ? "dark" : "light"} style={StyleSheet.absoluteFill} />
                 <View style={styles.modalContainer}>
                     <GlassView style={styles.modalContent} intensity={95}>
                         <View style={styles.modalHeader}>
-                            <Text style={styles.modalTitle}>Change Password</Text>
+                            <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Change Password</Text>
                             <TouchableOpacity onPress={onClose} disabled={loading}>
                                 <Ionicons name="close" size={24} color={colors.textPrimary} />
                             </TouchableOpacity>
                         </View>
 
                         <View style={styles.inputContainer}>
-                            <Text style={styles.label}>New Password</Text>
+                            <Text style={[styles.label, { color: colors.textSecondary }]}>New Password</Text>
                             <TextInput
-                                style={styles.input}
+                                style={[styles.input, { backgroundColor: colors.background, color: colors.textPrimary, borderColor: colors.border }]}
                                 value={password}
                                 onChangeText={setPassword}
                                 placeholder="Enter new password"
@@ -211,9 +214,9 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ visible, onCl
                         </View>
 
                         <View style={styles.inputContainer}>
-                            <Text style={styles.label}>Confirm Password</Text>
+                            <Text style={[styles.label, { color: colors.textSecondary }]}>Confirm Password</Text>
                             <TextInput
-                                style={styles.input}
+                                style={[styles.input, { backgroundColor: colors.background, color: colors.textPrimary, borderColor: colors.border }]}
                                 value={confirmPassword}
                                 onChangeText={setConfirmPassword}
                                 placeholder="Confirm new password"
@@ -237,6 +240,7 @@ const ChangePasswordModal: React.FC<ChangePasswordModalProps> = ({ visible, onCl
 
 export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
     const { user, logout, currency, toggleCurrency, updateUserProfile, changePassword } = useContext(FirebaseContext);
+    const { colors, theme, toggleTheme } = useTheme();
     const [editModalVisible, setEditModalVisible] = useState(false);
     const [passwordModalVisible, setPasswordModalVisible] = useState(false);
 
@@ -248,10 +252,10 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
             activeOpacity={0.7}
         >
             <View style={styles.itemLeft}>
-                <View style={[styles.iconContainer, danger && { backgroundColor: `${colors.error}20` }]}>
+                <View style={[styles.iconContainer, { backgroundColor: danger ? `${colors.error}20` : `${colors.primary}15` }]}>
                     <Ionicons name={icon as any} size={20} color={danger ? colors.error : colors.primary} />
                 </View>
-                <Text style={[styles.itemLabel, danger && { color: colors.error }]}>{label}</Text>
+                <Text style={[styles.itemLabel, { color: danger ? colors.error : colors.textPrimary }]}>{label}</Text>
             </View>
             {trailing ? trailing : <Ionicons name="chevron-forward" size={18} color={colors.textSecondary} />}
         </TouchableOpacity>
@@ -264,26 +268,26 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
                     <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
                         <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
                     </TouchableOpacity>
-                    <Text style={styles.headerTitle}>Settings</Text>
+                    <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Settings</Text>
                     <View style={{ width: 24 }} />
                 </View>
 
                 {/* Profile Card */}
                 <View style={styles.profileSection}>
-                    <View style={styles.profileHeader}>
+                    <View style={[styles.profileHeader, { backgroundColor: colors.surface }]}>
                         <Avatar source={{ uri: user?.avatar || 'https://via.placeholder.com/150' }} size={80} />
                         <View style={styles.profileInfo}>
-                            <Text style={styles.profileName}>{user?.name || 'User'}</Text>
-                            <Text style={styles.profileEmail}>{user?.email || 'email@example.com'}</Text>
+                            <Text style={[styles.profileName, { color: colors.textPrimary }]}>{user?.name || 'User'}</Text>
+                            <Text style={[styles.profileEmail, { color: colors.textSecondary }]}>{user?.email || 'email@example.com'}</Text>
                         </View>
-                        <TouchableOpacity style={styles.editButton} onPress={() => setEditModalVisible(true)}>
+                        <TouchableOpacity style={[styles.editButton, { backgroundColor: `${colors.primary}15` }]} onPress={() => setEditModalVisible(true)}>
                             <Ionicons name="pencil" size={20} color={colors.primary} />
                         </TouchableOpacity>
                     </View>
                 </View>
 
                 {/* Preferences */}
-                <Text style={styles.sectionHeader}>PREFERENCES</Text>
+                <Text style={[styles.sectionHeader, { color: colors.textSecondary }]}>PREFERENCES</Text>
                 <GlassView style={styles.sectionContainer}>
                     {renderItem(
                         "cash-outline",
@@ -298,22 +302,31 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
                             />
                         </View>
                     )}
-                    <View style={styles.separator} />
-                    {renderItem("moon-outline", "Dark Mode", <Switch value={false} disabled trackColor={{ false: colors.border, true: colors.primary }} />)}
-                    <View style={styles.separator} />
+                    <View style={[styles.separator, { backgroundColor: colors.border }]} />
+                    {renderItem(
+                        "moon-outline",
+                        "Dark Mode",
+                        <Switch
+                            value={theme === 'dark'}
+                            onValueChange={toggleTheme}
+                            trackColor={{ false: colors.border, true: colors.primary }}
+                            thumbColor={'#FFF'}
+                        />
+                    )}
+                    <View style={[styles.separator, { backgroundColor: colors.border }]} />
                     {renderItem("notifications-outline", "Notifications", <Switch value={true} disabled trackColor={{ false: colors.border, true: colors.primary }} />)}
                 </GlassView>
 
                 {/* Account */}
-                <Text style={styles.sectionHeader}>ACCOUNT</Text>
+                <Text style={[styles.sectionHeader, { color: colors.textSecondary }]}>ACCOUNT</Text>
                 <GlassView style={styles.sectionContainer}>
                     {renderItem("person-outline", "Edit Profile", undefined, () => setEditModalVisible(true))}
-                    <View style={styles.separator} />
+                    <View style={[styles.separator, { backgroundColor: colors.border }]} />
                     {renderItem("lock-closed-outline", "Change Password", undefined, () => setPasswordModalVisible(true))}
                 </GlassView>
 
                 {/* Danger Zone */}
-                <Text style={styles.sectionHeader}>SESSION</Text>
+                <Text style={[styles.sectionHeader, { color: colors.textSecondary }]}>SESSION</Text>
                 <GlassView style={styles.sectionContainer}>
                     {renderItem("log-out-outline", "Log Out", null, () => {
                         Alert.alert(
@@ -334,7 +347,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
                     }, true)}
                 </GlassView>
 
-                <Text style={styles.versionText}>Version 1.0.0</Text>
+                <Text style={[styles.versionText, { color: colors.textSecondary }]}>Version 1.0.0</Text>
             </ScrollView>
 
             {user && (
@@ -373,7 +386,6 @@ const styles = StyleSheet.create({
     } as ViewStyle,
     headerTitle: {
         ...(typography.h2 as TextStyle),
-        color: colors.textPrimary,
     } as TextStyle,
     profileSection: {
         marginBottom: layout.spacing.l,
@@ -382,7 +394,6 @@ const styles = StyleSheet.create({
     profileHeader: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: colors.surface,
         borderRadius: layout.borderRadius.l,
         padding: layout.spacing.l,
         ...layout.shadows.medium,
@@ -393,21 +404,17 @@ const styles = StyleSheet.create({
     } as ViewStyle,
     profileName: {
         ...(typography.h3 as TextStyle),
-        color: colors.textPrimary,
         marginBottom: 4,
     } as TextStyle,
     profileEmail: {
         ...(typography.body2 as TextStyle),
-        color: colors.textSecondary,
     } as TextStyle,
     editButton: {
         padding: 8,
-        backgroundColor: `${colors.primary}15`,
         borderRadius: layout.borderRadius.m,
     } as ViewStyle,
     sectionHeader: {
         ...(typography.caption as TextStyle),
-        color: colors.textSecondary,
         paddingHorizontal: layout.spacing.xl,
         marginBottom: layout.spacing.s,
         marginTop: layout.spacing.m,
@@ -416,9 +423,7 @@ const styles = StyleSheet.create({
     } as TextStyle,
     sectionContainer: {
         marginHorizontal: layout.spacing.l,
-        padding: 0, // GlassView adds padding, we might want to override or use inner view? 
-        // Actually GlassView implementation uses padding: layout.spacing.m
-        // Let's rely on item padding.
+        padding: 0,
     } as ViewStyle,
     item: {
         flexDirection: 'row',
@@ -439,24 +444,20 @@ const styles = StyleSheet.create({
         width: 36,
         height: 36,
         borderRadius: 12,
-        backgroundColor: `${colors.primary}15`,
         alignItems: 'center',
         justifyContent: 'center',
     } as ViewStyle,
     itemLabel: {
         ...(typography.body1 as TextStyle),
-        color: colors.textPrimary,
         fontWeight: '500',
     } as TextStyle,
     separator: {
         height: 1,
-        backgroundColor: colors.border,
-        marginLeft: 48, // inset for icon
+        marginLeft: 48,
     } as ViewStyle,
     versionText: {
         textAlign: 'center',
         marginTop: layout.spacing.xl,
-        color: colors.textSecondary,
         ...(typography.caption as TextStyle),
     } as TextStyle,
     modalOverlay: {
@@ -480,7 +481,6 @@ const styles = StyleSheet.create({
     } as ViewStyle,
     modalTitle: {
         ...(typography.h3 as TextStyle),
-        color: colors.textPrimary,
     } as TextStyle,
     avatarContainer: {
         alignItems: 'center',
@@ -490,31 +490,25 @@ const styles = StyleSheet.create({
         position: 'absolute',
         bottom: 0,
         right: 0,
-        backgroundColor: colors.primary,
         width: 32,
         height: 32,
         borderRadius: 16,
         justifyContent: 'center',
         alignItems: 'center',
         borderWidth: 2,
-        borderColor: colors.surface,
     } as ViewStyle,
     inputContainer: {
         marginBottom: layout.spacing.l,
     } as ViewStyle,
     label: {
         ...(typography.body2 as TextStyle),
-        color: colors.textSecondary,
         marginBottom: layout.spacing.s,
         marginLeft: layout.spacing.s,
     } as TextStyle,
     input: {
-        backgroundColor: colors.background,
         borderRadius: layout.borderRadius.m,
         padding: layout.spacing.m,
-        color: colors.textPrimary,
         borderWidth: 1,
-        borderColor: colors.border,
         fontSize: 16,
     } as TextStyle,
 });

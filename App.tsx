@@ -6,13 +6,17 @@ import { FirebaseProvider } from './src/context/FirebaseContext';
 
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
+import { ThemeProvider } from './src/context/ThemeContext';
+
 export default function App() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-        <FirebaseProvider>
-          <AppNavigator />
-        </FirebaseProvider>
+        <ThemeProvider>
+          <FirebaseProvider>
+            <AppNavigator />
+          </FirebaseProvider>
+        </ThemeProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

@@ -3,11 +3,11 @@ import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, ViewStyl
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { ScreenWrapper } from '../components/ScreenWrapper';
-import { colors } from '../theme/colors';
+import { useTheme } from '../context/ThemeContext';
 import { typography } from '../theme/typography';
 import { layout } from '../theme/layout';
 import { RootStackParamList } from '../navigation/types';
-import { MockContext } from '../context/MockContext';
+import { FirebaseContext } from '../context/FirebaseContext';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Chat'>;
 
@@ -28,7 +28,8 @@ const MOCK_MESSAGES: Message[] = [
 
 export const ChatScreen: React.FC<Props> = ({ navigation, route }) => {
     const { group } = route.params;
-    const { user } = useContext(MockContext);
+    const { user } = useContext(FirebaseContext);
+    const { colors } = useTheme();
     const [messages, setMessages] = useState<Message[]>(MOCK_MESSAGES);
     const [inputText, setInputText] = useState('');
     const flatListRef = useRef<FlatList>(null);
@@ -67,12 +68,22 @@ export const ChatScreen: React.FC<Props> = ({ navigation, route }) => {
         return (
             <View style={[styles.messageRow, isMe ? styles.myMessageRow : styles.otherMessageRow]}>
                 {!isMe && <Image source={{ uri: item.avatar }} style={styles.avatar} />}
-                <View style={[styles.messageBubble, isMe ? styles.myBubble : styles.otherBubble]}>
-                    {!isMe && <Text style={styles.senderName}>{item.senderName}</Text>}
-                    <Text style={[styles.messageText, isMe ? styles.myMessageText : styles.otherMessageText]}>
+                <View style={[
+                    styles.messageBubble,
+                    isMe ? { backgroundColor: colors.primary, borderBottomLeftRadius: layout.borderRadius.l, borderBottomRightRadius: 4 }
+                        : { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border }
+                ]}>
+                    {!isMe && <Text style={[styles.senderName, { color: colors.textSecondary }]}>{item.senderName}</Text>}
+                    <Text style={[
+                        styles.messageText,
+                        isMe ? styles.myMessageText : { color: colors.textPrimary }
+                    ]}>
                         {item.text}
                     </Text>
-                    <Text style={[styles.timestamp, isMe ? styles.myTimestamp : styles.otherTimestamp]}>
+                    <Text style={[
+                        styles.timestamp,
+                        isMe ? styles.myTimestamp : { color: colors.textSecondary }
+                    ]}>
                         {new Date(item.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </Text>
                 </View>
@@ -82,13 +93,13 @@ export const ChatScreen: React.FC<Props> = ({ navigation, route }) => {
 
     return (
         <ScreenWrapper edges={['top', 'left', 'right']}>
-            <View style={styles.header}>
+            <View style={[styles.header, { borderBottomColor: colors.border, backgroundColor: colors.background }]}>
                 <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
                     <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
                 </TouchableOpacity>
                 <View>
-                    <Text style={styles.headerTitle}>{group.name}</Text>
-                    <Text style={styles.headerSubtitle}>Chat</Text>
+                    <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>{group.name}</Text>
+                    <Text style={[styles.headerSubtitle, { color: colors.primary }]}>Chat</Text>
                 </View>
             </View>
 
@@ -102,9 +113,9 @@ export const ChatScreen: React.FC<Props> = ({ navigation, route }) => {
             />
 
             <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}>
-                <View style={styles.inputContainer}>
+                <View style={[styles.inputContainer, { backgroundColor: colors.surface, borderTopColor: colors.border }]}>
                     <TextInput
-                        style={styles.input}
+                        style={[styles.input, { backgroundColor: colors.background, color: colors.textPrimary, borderColor: colors.border }]}
                         value={inputText}
                         onChangeText={setInputText}
                         placeholder="Type a message..."
@@ -115,7 +126,7 @@ export const ChatScreen: React.FC<Props> = ({ navigation, route }) => {
                         autoCapitalize="sentences"
                         keyboardAppearance="dark"
                     />
-                    <TouchableOpacity style={styles.sendButton} onPress={handleSend}>
+                    <TouchableOpacity style={[styles.sendButton, { backgroundColor: colors.primary }]} onPress={handleSend}>
                         <Ionicons name="send" size={20} color="#FFF" />
                     </TouchableOpacity>
                 </View>
@@ -131,19 +142,15 @@ const styles = StyleSheet.create({
         paddingHorizontal: layout.spacing.l,
         paddingVertical: layout.spacing.m,
         borderBottomWidth: 1,
-        borderBottomColor: colors.border,
-        backgroundColor: colors.background,
     } as ViewStyle,
     backButton: {
         marginRight: layout.spacing.m,
     } as ViewStyle,
     headerTitle: {
         ...(typography.h3 as TextStyle),
-        color: colors.textPrimary,
     } as TextStyle,
     headerSubtitle: {
         ...(typography.caption as TextStyle),
-        color: colors.primary,
     } as TextStyle,
     listContent: {
         padding: layout.spacing.m,
@@ -172,19 +179,8 @@ const styles = StyleSheet.create({
         borderRadius: layout.borderRadius.l,
         borderBottomLeftRadius: 4,
     } as ViewStyle,
-    myBubble: {
-        backgroundColor: colors.primary,
-        borderBottomLeftRadius: layout.borderRadius.l,
-        borderBottomRightRadius: 4,
-    } as ViewStyle,
-    otherBubble: {
-        backgroundColor: colors.surface,
-        borderWidth: 1,
-        borderColor: colors.border,
-    } as ViewStyle,
     senderName: {
         ...(typography.caption as TextStyle),
-        color: colors.textSecondary,
         marginBottom: 2,
     } as TextStyle,
     messageText: {
@@ -194,9 +190,6 @@ const styles = StyleSheet.create({
     myMessageText: {
         color: '#FFF',
     } as TextStyle,
-    otherMessageText: {
-        color: colors.textPrimary,
-    } as TextStyle,
     timestamp: {
         fontSize: 10,
         marginTop: 4,
@@ -205,34 +198,25 @@ const styles = StyleSheet.create({
     myTimestamp: {
         color: 'rgba(255,255,255,0.7)',
     } as TextStyle,
-    otherTimestamp: {
-        color: colors.textSecondary,
-    } as TextStyle,
     inputContainer: {
         flexDirection: 'row',
         alignItems: 'center',
         padding: layout.spacing.m,
-        backgroundColor: colors.surface,
         borderTopWidth: 1,
-        borderTopColor: colors.border,
     } as ViewStyle,
     input: {
         flex: 1,
-        backgroundColor: colors.background,
         borderRadius: 20,
         paddingHorizontal: layout.spacing.m,
         paddingVertical: layout.spacing.s,
         maxHeight: 100,
-        color: colors.textPrimary,
         borderWidth: 1,
-        borderColor: colors.border,
         marginRight: layout.spacing.m,
     } as TextStyle,
     sendButton: {
         width: 40,
         height: 40,
         borderRadius: 20,
-        backgroundColor: colors.primary,
         justifyContent: 'center',
         alignItems: 'center',
     } as ViewStyle,

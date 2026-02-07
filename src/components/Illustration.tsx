@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, ViewStyle } from 'react-native';
 import Svg, { Path, Circle, Defs, LinearGradient, Stop, G } from 'react-native-svg';
-import { colors } from '../theme/colors';
+import { useTheme } from '../context/ThemeContext';
 
 interface IllustrationProps {
     type: 'finance' | 'friends' | 'settle' | 'logo';
@@ -11,6 +11,7 @@ interface IllustrationProps {
 }
 
 export const Illustration: React.FC<IllustrationProps> = ({ type, width = 200, height = 200, style }) => {
+    const { colors } = useTheme();
 
     const renderContent = () => {
         switch (type) {
@@ -21,7 +22,7 @@ export const Illustration: React.FC<IllustrationProps> = ({ type, width = 200, h
                         <Path
                             d="M100 20 L180 60 L180 140 L100 180 L20 140 L20 60 Z"
                             fill="url(#grad1)"
-                            stroke={colors.primaryLight}
+                            stroke={colors.primaryLight || colors.primary} // fallback if primaryLight not in theme colors type yet, but it should be? Check colors.ts. Actually colors.ts usually has primaryLight.
                             strokeWidth="2"
                         />
                         <Path
@@ -92,7 +93,7 @@ export const Illustration: React.FC<IllustrationProps> = ({ type, width = 200, h
                 <Defs>
                     <LinearGradient id="grad1" x1="0" y1="0" x2="1" y2="1">
                         <Stop offset="0" stopColor={colors.primary} stopOpacity="1" />
-                        <Stop offset="1" stopColor={colors.primaryDark} stopOpacity="1" />
+                        <Stop offset="1" stopColor={colors.primaryDark || colors.primary} stopOpacity="1" />
                     </LinearGradient>
                 </Defs>
                 {renderContent()}

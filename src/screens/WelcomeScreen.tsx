@@ -4,7 +4,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { ScreenWrapper } from '../components/ScreenWrapper';
 import { GradientButton } from '../components/GradientButton';
 import { Illustration } from '../components/Illustration';
-import { colors } from '../theme/colors';
+import { useTheme } from '../context/ThemeContext';
 import { typography } from '../theme/typography';
 import { layout } from '../theme/layout';
 import { RootStackParamList } from '../navigation/types';
@@ -12,12 +12,14 @@ import { RootStackParamList } from '../navigation/types';
 type Props = NativeStackScreenProps<RootStackParamList, 'Welcome'>;
 
 export const WelcomeScreen: React.FC<Props> = ({ navigation }) => {
+    const { colors } = useTheme();
+
     return (
         <ScreenWrapper style={styles.container}>
             <View style={styles.logoContainer}>
                 <Illustration type="logo" width={150} height={150} />
-                <Text style={styles.appName}>Expense<Text style={styles.appNameHighlight}>Splitter</Text></Text>
-                <Text style={styles.tagline}>Financial harmony for everyone.</Text>
+                <Text style={[styles.appName, { color: colors.textPrimary }]}>Expense<Text style={[styles.appNameHighlight, { color: colors.primary }]}>Splitter</Text></Text>
+                <Text style={[styles.tagline, { color: colors.textSecondary }]}>Financial harmony for everyone.</Text>
             </View>
 
             <View style={styles.footer}>
@@ -30,7 +32,7 @@ export const WelcomeScreen: React.FC<Props> = ({ navigation }) => {
                     title="Create Account"
                     onPress={() => navigation.navigate('Signup')}
                     colors={[colors.surface, colors.surface]} // Secondary style
-                    style={styles.createButton}
+                    style={[styles.createButton, { borderColor: colors.border }]}
                 />
             </View>
         </ScreenWrapper>
@@ -49,16 +51,13 @@ const styles = StyleSheet.create({
     appName: {
         fontSize: 36,
         fontWeight: 'bold',
-        color: colors.textPrimary,
         marginTop: layout.spacing.l,
         letterSpacing: -1,
     } as TextStyle,
     appNameHighlight: {
-        color: colors.primary,
     } as TextStyle,
     tagline: {
         ...(typography.body1 as TextStyle),
-        color: colors.textSecondary,
         marginTop: layout.spacing.s,
     } as TextStyle,
     footer: {
@@ -71,6 +70,5 @@ const styles = StyleSheet.create({
     } as ViewStyle,
     createButton: {
         borderWidth: 1,
-        borderColor: colors.border,
     } as ViewStyle,
 });

@@ -6,7 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { ScreenWrapper } from '../../components/ScreenWrapper';
 import { Input } from '../../components/Input';
 import { GradientButton } from '../../components/GradientButton';
-import { colors } from '../../theme/colors';
+import { useTheme } from '../../context/ThemeContext';
 import { typography } from '../../theme/typography';
 import { layout } from '../../theme/layout';
 import { RootStackParamList } from '../../navigation/types';
@@ -16,6 +16,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Signup'>;
 
 export const SignupScreen: React.FC<Props> = ({ navigation }) => {
     const { signup } = useContext(FirebaseContext);
+    const { colors } = useTheme();
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -52,18 +53,18 @@ export const SignupScreen: React.FC<Props> = ({ navigation }) => {
                 >
                     <View style={styles.header}>
                         <View style={styles.iconRow}>
-                            <View style={[styles.iconContainer, { transform: [{ rotate: '-10deg' }], marginTop: 15 }]}>
+                            <View style={[styles.iconContainer, { backgroundColor: colors.surface, borderColor: colors.border, transform: [{ rotate: '-10deg' }], marginTop: 15 }]}>
                                 <Ionicons name="pie-chart-outline" size={32} color={colors.primary} />
                             </View>
-                            <View style={[styles.iconContainer, styles.mainIcon, { zIndex: 10 }]}>
+                            <View style={[styles.iconContainer, styles.mainIcon, { backgroundColor: colors.surface, borderColor: colors.secondary + '40', zIndex: 10 }]}>
                                 <Ionicons name="person-add" size={48} color={colors.secondary} />
                             </View>
-                            <View style={[styles.iconContainer, { transform: [{ rotate: '10deg' }], marginTop: 15 }]}>
+                            <View style={[styles.iconContainer, { backgroundColor: colors.surface, borderColor: colors.border, transform: [{ rotate: '10deg' }], marginTop: 15 }]}>
                                 <Ionicons name="trending-up" size={32} color={colors.success} />
                             </View>
                         </View>
-                        <Text style={styles.title}>Create Account</Text>
-                        <Text style={styles.subtitle}>Join us and start splitting expenses.</Text>
+                        <Text style={[styles.title, { color: colors.textPrimary }]}>Create Account</Text>
+                        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Join us and start splitting expenses.</Text>
                     </View>
 
                     <View style={styles.form}>
@@ -98,9 +99,9 @@ export const SignupScreen: React.FC<Props> = ({ navigation }) => {
                     </View>
 
                     <View style={styles.footer}>
-                        <Text style={styles.footerText}>Already have an account? </Text>
+                        <Text style={[styles.footerText, { color: colors.textSecondary }]}>Already have an account? </Text>
                         <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-                            <Text style={styles.linkText}>Log In</Text>
+                            <Text style={[styles.linkText, { color: colors.primary }]}>Log In</Text>
                         </TouchableOpacity>
                     </View>
                 </ScrollView>
@@ -129,31 +130,25 @@ const styles = StyleSheet.create({
         width: 60,
         height: 60,
         borderRadius: 30,
-        backgroundColor: colors.surface,
         justifyContent: 'center',
         alignItems: 'center',
         borderWidth: 1,
-        borderColor: colors.border,
         ...layout.shadows.small,
     } as ViewStyle,
     mainIcon: {
         width: 80,
         height: 80,
         borderRadius: 40,
-        backgroundColor: colors.surface,
         borderWidth: 1,
-        borderColor: colors.secondary + '40', // slightly transparent border
         ...layout.shadows.medium,
     } as ViewStyle,
     title: {
         ...(typography.h1 as TextStyle),
-        color: colors.textPrimary,
         marginBottom: layout.spacing.s,
         textAlign: 'center',
     } as TextStyle,
     subtitle: {
         ...(typography.body1 as TextStyle),
-        color: colors.textSecondary,
         textAlign: 'center',
     } as TextStyle,
     form: {
@@ -170,11 +165,9 @@ const styles = StyleSheet.create({
     } as ViewStyle,
     footerText: {
         ...(typography.body2 as TextStyle),
-        color: colors.textSecondary,
     } as TextStyle,
     linkText: {
         ...(typography.body2 as TextStyle),
-        color: colors.primary,
         fontWeight: 'bold',
     } as TextStyle,
 });

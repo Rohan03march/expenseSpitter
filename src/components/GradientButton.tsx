@@ -1,8 +1,9 @@
 import React from 'react';
-import { Text, TouchableOpacity, StyleSheet, ActivityIndicator, ViewStyle, TextStyle } from 'react-native';
+import { Text, TouchableOpacity, StyleSheet, ActivityIndicator, ViewStyle, TextStyle, StyleProp } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import * as Haptics from 'expo-haptics';
-import { colors, gradients } from '../theme/colors';
+import { useTheme } from '../context/ThemeContext';
+import { gradients } from '../theme/colors';
 import { typography } from '../theme/typography';
 import { layout } from '../theme/layout';
 
@@ -12,7 +13,7 @@ interface GradientButtonProps {
     loading?: boolean;
     disabled?: boolean;
     colors?: string[];
-    style?: ViewStyle;
+    style?: StyleProp<ViewStyle>;
 }
 
 export const GradientButton: React.FC<GradientButtonProps> = ({
@@ -23,6 +24,8 @@ export const GradientButton: React.FC<GradientButtonProps> = ({
     colors: buttonColors = gradients.primary,
     style
 }) => {
+    const { colors } = useTheme();
+
     const handlePress = () => {
         if (!disabled && !loading) {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -46,7 +49,7 @@ export const GradientButton: React.FC<GradientButtonProps> = ({
                 {loading ? (
                     <ActivityIndicator color={colors.textPrimary} />
                 ) : (
-                    <Text style={[styles.text, disabled && styles.disabledText]}>{title}</Text>
+                    <Text style={[styles.text, { color: colors.textPrimary }, disabled && { color: colors.textSecondary }]}>{title}</Text>
                 )}
             </LinearGradient>
         </TouchableOpacity>
@@ -67,10 +70,6 @@ const styles = StyleSheet.create({
     },
     text: {
         ...(typography.button as TextStyle),
-        color: colors.textPrimary,
         fontWeight: 'bold',
-    },
-    disabledText: {
-        color: colors.textSecondary,
     },
 });

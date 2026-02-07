@@ -7,7 +7,8 @@ import { ScreenWrapper } from '../components/ScreenWrapper';
 import { GlassView } from '../components/GlassView';
 import { Input } from '../components/Input';
 import { GradientButton } from '../components/GradientButton';
-import { colors, gradients } from '../theme/colors';
+import { useTheme } from '../context/ThemeContext';
+import { gradients } from '../theme/colors';
 import { typography } from '../theme/typography';
 import { layout } from '../theme/layout';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -15,13 +16,12 @@ import { RootStackParamList } from '../navigation/types';
 import { Avatar } from '../components/Avatar';
 import { FirebaseContext, Expense, User } from '../context/FirebaseContext';
 
-// ... existing imports
-
 type Props = NativeStackScreenProps<RootStackParamList, 'GroupDashboard'>;
 
 export const GroupDashboardScreen: React.FC<Props> = ({ route, navigation }) => {
     const { group: initialGroup, requestId, requestTitle } = route.params;
-    const { getGroupExpenses, formatCurrency, currency, getGroupBalances, deleteGroup, addMember, addMemberToRequest, removeMember, removeMemberFromRequest, groups, groupRequests, searchUser, user: currentUser } = useContext(FirebaseContext);
+    const { getGroupExpenses, formatCurrency, getGroupBalances, deleteGroup, addMember, addMemberToRequest, removeMember, removeMemberFromRequest, groups, groupRequests, searchUser, user: currentUser } = useContext(FirebaseContext);
+    const { colors } = useTheme();
 
     // Get real-time group data from context
     const group = groups.find(g => g.id === initialGroup.id) || initialGroup;
@@ -119,30 +119,25 @@ export const GroupDashboardScreen: React.FC<Props> = ({ route, navigation }) => 
     // Calculate My Total Spend (Consumption): 
     // Sum of (Amount / SplitCount) for expenses where I am involved.
     // Exclude settlements.
-    console.log('[Dashboard] Current User ID:', currentUserId);
     const myNetSpend = expenses.reduce((acc, expense) => {
         if (expense.type === 'settlement') return acc;
 
         if (expense.splitWith.includes(currentUserId)) {
             const splitCount = Math.max(1, expense.splitWith.length);
             const share = expense.amount / splitCount;
-            console.log(`[Dashboard] Expense: ${expense.title}, Total: ${expense.amount}, SplitWith: ${JSON.stringify(expense.splitWith)}, Count: ${splitCount}, MyShare: ${share}`);
             return acc + share;
-        } else {
-            console.log(`[Dashboard] Skipping ${expense.title} (Not involved)`);
         }
 
         return acc;
     }, 0);
-    console.log('[Dashboard] Final MyNetSpend:', myNetSpend);
 
     return (
         <ScreenWrapper keyboardShouldDismiss={false}>
-            <View style={styles.header}>
+            <View style={[styles.header, { borderBottomColor: colors.border }]}>
                 <TouchableOpacity onPress={() => navigation.goBack()} style={styles.iconButton}>
                     <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
                 </TouchableOpacity>
-                <Text style={styles.headerTitle} numberOfLines={1}>{requestTitle ? `${group.name} - ${requestTitle}` : group.name}</Text>
+                <Text style={[styles.headerTitle, { color: colors.textPrimary }]} numberOfLines={1}>{requestTitle ? `${group.name} - ${requestTitle}` : group.name}</Text>
                 <View style={{ flexDirection: 'row' }}>
                     <TouchableOpacity onPress={() => navigation.navigate('Chat', { group })} style={styles.iconButton}>
                         <Ionicons name="chatbubble-outline" size={24} color={colors.textPrimary} />
@@ -156,31 +151,30 @@ export const GroupDashboardScreen: React.FC<Props> = ({ route, navigation }) => 
             <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} keyboardDismissMode="on-drag">
 
                 {/* Hero Card */}
-                {/* Hero Card */}
                 <LinearGradient
-                    colors={[colors.surface, '#252F45']}
+                    colors={colors.surfaceHighlight ? [colors.surface, colors.surfaceHighlight] : [colors.surface, '#252F45']}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
-                    style={styles.heroCard}
+                    style={[styles.heroCard, { borderColor: colors.border, borderWidth: 1 }]}
                 >
                     <View style={styles.heroHeader}>
-                        <Image source={{ uri: group.image || 'https://via.placeholder.com/150' }} style={styles.groupImage} />
+                        <Image source={{ uri: group.image || 'https://via.placeholder.com/150' }} style={[styles.groupImage, { borderColor: colors.border, borderWidth: 1 }]} />
                         <View style={{ flex: 1, marginLeft: layout.spacing.m }}>
-                            <Text style={styles.groupName}>{group.name}</Text>
-                            <Text style={styles.groupMeta}>{group.members.length} members • Created recently</Text>
+                            <Text style={[styles.groupName, { color: colors.textPrimary }]}>{group.name}</Text>
+                            <Text style={[styles.groupMeta, { color: colors.textSecondary }]}>{group.members.length} members • Created recently</Text>
                         </View>
                     </View>
 
-                    <View style={styles.divider} />
+                    <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
                     <View style={styles.statsRow}>
                         <View style={styles.statCol}>
-                            <Text style={styles.statLabel}>My Total Spend</Text>
-                            <Text style={styles.statValue}>{formatCurrency(Math.max(0, myNetSpend))}</Text>
+                            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>My Total Spend</Text>
+                            <Text style={[styles.statValue, { color: colors.textPrimary }]}>{formatCurrency(Math.max(0, myNetSpend))}</Text>
                         </View>
-                        <View style={styles.verticalDivider} />
+                        <View style={[styles.verticalDivider, { backgroundColor: colors.border }]} />
                         <TouchableOpacity style={styles.statCol} onPress={() => navigation.navigate('Balances', { group })}>
-                            <Text style={styles.statLabel}>My Balance</Text>
+                            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>My Balance</Text>
                             <Text style={[styles.statValue, { color: isPositive ? colors.success : colors.error }]}>
                                 {isPositive ? '+' : ''}{formatCurrency(myBalance)}
                             </Text>
@@ -228,7 +222,7 @@ export const GroupDashboardScreen: React.FC<Props> = ({ route, navigation }) => 
                 </View>
 
                 {/* Members Section */}
-                <Text style={styles.sectionTitle}>Members</Text>
+                <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Members</Text>
                 <View style={styles.membersContainer}>
                     <ScrollView
                         horizontal
@@ -237,10 +231,10 @@ export const GroupDashboardScreen: React.FC<Props> = ({ route, navigation }) => 
                         contentContainerStyle={styles.membersScrollContent}
                     >
                         <TouchableOpacity style={styles.addMemberBtn} onPress={() => { setShowAddMemberModal(true); setFoundUser(null); setSearchQuery(''); }}>
-                            <View style={styles.addMemberIcon}>
+                            <View style={[styles.addMemberIcon, { borderColor: colors.primary, backgroundColor: colors.primaryLight + '10' }]}>
                                 <Ionicons name="person-add" size={20} color={colors.primary} />
                             </View>
-                            <Text style={styles.memberName}>Add</Text>
+                            <Text style={[styles.memberName, { color: colors.textSecondary }]}>Add</Text>
                         </TouchableOpacity>
 
                         {group.members.map((member: User) => {
@@ -251,9 +245,6 @@ export const GroupDashboardScreen: React.FC<Props> = ({ route, navigation }) => 
                             const currentRequest = requestId ? groupRequests.find(r => r.id === requestId) : null;
                             const isMemberInRequest = currentRequest ? currentRequest.memberIds.includes(member.id) : true;
 
-                            // If we are in a request view, only show members of that request? 
-                            // OR show all group members but indicate who is in request?
-                            // User wants to remove members from request. So we should probably list members of the request.
                             if (requestId && !isMemberInRequest) return null;
 
                             const canRemove = requestId
@@ -263,10 +254,10 @@ export const GroupDashboardScreen: React.FC<Props> = ({ route, navigation }) => 
                             return (
                                 <View key={member.id} style={styles.memberItem}>
                                     <Avatar source={{ uri: member.avatar }} size={50} />
-                                    <Text style={styles.memberName} numberOfLines={1}>{member.name}</Text>
+                                    <Text style={[styles.memberName, { color: colors.textSecondary }]} numberOfLines={1}>{member.name}</Text>
                                     {!isCurrentUser && canRemove && (
                                         <TouchableOpacity
-                                            style={styles.removeMemberBtn}
+                                            style={[styles.removeMemberBtn, { backgroundColor: colors.surface, borderColor: colors.error }]}
                                             onPress={() => handleRemoveMember(member.id)}
                                         >
                                             <Ionicons name="close" size={12} color={colors.error} />
@@ -279,7 +270,7 @@ export const GroupDashboardScreen: React.FC<Props> = ({ route, navigation }) => 
                 </View>
 
                 {/* Recent Activity */}
-                <Text style={styles.sectionTitle}>Recent Activity</Text>
+                <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Recent Activity</Text>
                 <View style={styles.listContainer}>
                     {expenses.map((expense) => {
                         const date = new Date(expense.date);
@@ -300,14 +291,14 @@ export const GroupDashboardScreen: React.FC<Props> = ({ route, navigation }) => 
 
                             renderContent = (
                                 <View style={styles.settlementRow}>
-                                    <View style={styles.settlementIconBg}>
+                                    <View style={[styles.settlementIconBg, { backgroundColor: colors.surface, borderColor: colors.border }]}>
                                         <Ionicons name="swap-horizontal" size={20} color={colors.primary} />
                                     </View>
                                     <View style={{ flex: 1, marginLeft: layout.spacing.m }}>
-                                        <Text style={styles.expenseTitle}>
+                                        <Text style={[styles.expenseTitle, { color: colors.textPrimary }]}>
                                             <Text style={{ fontWeight: 'bold' }}>{payerName}</Text> paid <Text style={{ fontWeight: 'bold' }}>{recipientName}</Text>
                                         </Text>
-                                        <Text style={styles.dateText}>{dateString}</Text>
+                                        <Text style={[styles.dateText, { color: colors.textSecondary }]}>{dateString}</Text>
                                     </View>
                                     <Text style={[styles.amountValue, { color: colors.success }]}>
                                         {formatCurrency(expense.amount)}
@@ -318,17 +309,17 @@ export const GroupDashboardScreen: React.FC<Props> = ({ route, navigation }) => 
                             renderContent = (
                                 <>
                                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                                        <Text style={styles.expenseTitle}>{expense.title}</Text>
+                                        <Text style={[styles.expenseTitle, { color: colors.textPrimary }]}>{expense.title}</Text>
                                         <Text style={[styles.amountValue, { color: isMe ? colors.success : colors.error }]}>
                                             {isMe ? '+' : '-'}{formatCurrency(expense.amount / Math.max(1, expense.splitWith.length))}
                                         </Text>
                                     </View>
 
                                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 }}>
-                                        <Text style={styles.expenseSubtitle}>
+                                        <Text style={[styles.expenseSubtitle, { color: colors.textSecondary }]}>
                                             <Text style={{ fontWeight: '600', color: colors.textPrimary }}>{isMe ? 'You' : payer?.name || 'Unknown'}</Text> paid {formatCurrency(expense.amount)}
                                         </Text>
-                                        <Text style={styles.dateText}>{dateString}</Text>
+                                        <Text style={[styles.dateText, { color: colors.textSecondary }]}>{dateString}</Text>
                                     </View>
                                 </>
                             );
@@ -343,7 +334,7 @@ export const GroupDashboardScreen: React.FC<Props> = ({ route, navigation }) => 
                                     const requestMemberIds = currentRequest ? currentRequest.memberIds : null;
                                     navigation.navigate('AddExpense', { group, expense, requestMemberIds });
                                 }}
-                                style={[styles.expenseItem, isSettlement && styles.settlementItem]}
+                                style={[styles.expenseItem, { backgroundColor: colors.surface, borderColor: colors.border }, isSettlement && { backgroundColor: colors.primaryLight + '10', borderColor: colors.primaryLight + '30' }]}
                             >
                                 {!isSettlement && <Avatar source={{ uri: payer?.avatar || 'https://i.pravatar.cc/150' }} size={44} />}
 
@@ -356,15 +347,15 @@ export const GroupDashboardScreen: React.FC<Props> = ({ route, navigation }) => 
                     {expenses.length === 0 && (
                         <View style={styles.emptyState}>
                             <Ionicons name="receipt-outline" size={48} color={colors.textSecondary} style={{ opacity: 0.5, marginBottom: layout.spacing.m }} />
-                            <Text style={styles.emptyText}>No expenses yet</Text>
-                            <Text style={styles.emptySubtext}>Tap the + button to add the first expense</Text>
+                            <Text style={[styles.emptyText, { color: colors.textPrimary }]}>No expenses yet</Text>
+                            <Text style={[styles.emptySubtext, { color: colors.textSecondary }]}>Tap the + button to add the first expense</Text>
                         </View>
                     )}
                 </View>
 
                 {group.createdBy === currentUser?.id && !requestId && (
                     <TouchableOpacity
-                        style={styles.deleteGroupBtn}
+                        style={[styles.deleteGroupBtn, { borderColor: colors.error, backgroundColor: colors.error + '10' }]}
                         onPress={() => {
                             Alert.alert(
                                 "Delete Group",
@@ -382,7 +373,7 @@ export const GroupDashboardScreen: React.FC<Props> = ({ route, navigation }) => 
                         }}
                     >
                         <Ionicons name="trash-outline" size={24} color={colors.error} />
-                        <Text style={styles.deleteGroupText}>Delete Group</Text>
+                        <Text style={[styles.deleteGroupText, { color: colors.error }]}>Delete Group</Text>
                     </TouchableOpacity>
                 )}
 
@@ -390,7 +381,7 @@ export const GroupDashboardScreen: React.FC<Props> = ({ route, navigation }) => 
 
             {(!requestId || (requestId && groupRequests.find(r => r.id === requestId)?.createdBy === currentUser?.id)) && (
                 <TouchableOpacity
-                    style={styles.fab}
+                    style={[styles.fab, { backgroundColor: colors.primary }]}
                     onPress={() => {
                         const currentRequest = requestId ? groupRequests.find(r => r.id === requestId) : null;
                         const requestMemberIds = currentRequest ? currentRequest.memberIds : null;
@@ -403,9 +394,9 @@ export const GroupDashboardScreen: React.FC<Props> = ({ route, navigation }) => 
 
             {showAddMemberModal && (
                 <View style={styles.modalOverlay}>
-                    <GlassView style={styles.modalContent} intensity={95}>
+                    <GlassView style={[styles.modalContent, { backgroundColor: colors.surface, borderColor: colors.border }]} intensity={95}>
                         <View style={styles.modalHeader}>
-                            <Text style={styles.modalTitle}>Add Member</Text>
+                            <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Add Member</Text>
                             <TouchableOpacity onPress={() => { setShowAddMemberModal(false); setSearchQuery(''); setFoundUser(null); }}>
                                 <Ionicons name="close" size={24} color={colors.textPrimary} />
                             </TouchableOpacity>
@@ -496,7 +487,6 @@ const styles = StyleSheet.create({
     } as ViewStyle,
     headerTitle: {
         ...(typography.h3 as TextStyle),
-        color: colors.textPrimary,
         flex: 1,
         textAlign: 'center',
         marginHorizontal: layout.spacing.m,
@@ -519,21 +509,19 @@ const styles = StyleSheet.create({
         width: 60,
         height: 60,
         borderRadius: 30,
-        backgroundColor: colors.surfaceLight,
+        backgroundColor: 'rgba(255,255,255,0.1)',
+        borderWidth: 1,
     } as ImageStyle,
     groupName: {
         ...(typography.h3 as TextStyle),
-        color: colors.textPrimary,
         fontWeight: 'bold',
     } as TextStyle,
     groupMeta: {
         ...(typography.caption as TextStyle),
-        color: colors.textSecondary,
         marginTop: 4,
     } as TextStyle,
     divider: {
         height: 1,
-        backgroundColor: 'rgba(255,255,255,0.1)',
         marginVertical: layout.spacing.m,
     } as ViewStyle,
     statsRow: {
@@ -546,19 +534,16 @@ const styles = StyleSheet.create({
     } as ViewStyle,
     verticalDivider: {
         width: 1,
-        backgroundColor: 'rgba(255,255,255,0.1)',
         marginHorizontal: layout.spacing.m,
     } as ViewStyle,
     statLabel: {
         ...(typography.caption as TextStyle),
-        color: colors.textSecondary,
         textTransform: 'uppercase',
         letterSpacing: 1,
         marginBottom: 4,
     } as TextStyle,
     statValue: {
         ...(typography.h2 as TextStyle),
-        color: colors.textPrimary,
         fontSize: 24,
         fontWeight: '700',
     } as TextStyle,
@@ -585,7 +570,6 @@ const styles = StyleSheet.create({
     },
     sectionTitle: {
         ...(typography.h3 as TextStyle),
-        color: colors.textPrimary,
         marginBottom: layout.spacing.m,
     } as TextStyle,
     listContainer: {
@@ -596,11 +580,9 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         paddingVertical: layout.spacing.m,
         paddingHorizontal: layout.spacing.m,
-        backgroundColor: 'rgba(255,255,255,0.03)',
         borderRadius: layout.borderRadius.l,
         marginBottom: layout.spacing.s,
         borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.05)',
     } as ViewStyle,
     expenseInfo: {
         flex: 1,
@@ -609,13 +591,11 @@ const styles = StyleSheet.create({
     } as ViewStyle,
     expenseTitle: {
         ...(typography.body1 as TextStyle),
-        color: colors.textPrimary,
         fontWeight: '600',
         fontSize: 16,
     } as TextStyle,
     expenseSubtitle: {
         ...(typography.caption as TextStyle),
-        color: colors.textSecondary,
         fontSize: 13,
     } as TextStyle,
     amountValue: {
@@ -625,7 +605,6 @@ const styles = StyleSheet.create({
     } as TextStyle,
     dateText: {
         ...(typography.caption as TextStyle),
-        color: colors.textSecondary,
         fontSize: 12,
     } as TextStyle,
     emptyState: {
@@ -636,12 +615,10 @@ const styles = StyleSheet.create({
     } as ViewStyle,
     emptyText: {
         ...(typography.h3 as TextStyle),
-        color: colors.textPrimary,
         marginBottom: layout.spacing.s,
     } as TextStyle,
     emptySubtext: {
         ...(typography.body2 as TextStyle),
-        color: colors.textSecondary,
         textAlign: 'center',
     } as TextStyle,
     fab: {
@@ -651,7 +628,6 @@ const styles = StyleSheet.create({
         width: 64,
         height: 64,
         borderRadius: 32,
-        backgroundColor: colors.primary,
         justifyContent: 'center',
         alignItems: 'center',
         ...layout.shadows.large,
@@ -663,14 +639,11 @@ const styles = StyleSheet.create({
         padding: layout.spacing.m,
         marginTop: layout.spacing.xl,
         borderWidth: 1,
-        borderColor: colors.error,
         borderRadius: layout.borderRadius.m,
         gap: layout.spacing.s,
-        backgroundColor: 'rgba(255, 59, 48, 0.1)',
     } as ViewStyle,
     deleteGroupText: {
         ...(typography.button as TextStyle),
-        color: colors.error,
     } as TextStyle,
     membersContainer: {
         marginBottom: layout.spacing.l,
@@ -690,7 +663,6 @@ const styles = StyleSheet.create({
     } as ViewStyle,
     memberName: {
         ...(typography.caption as TextStyle),
-        color: colors.textSecondary,
         marginTop: 6,
         textAlign: 'center',
         fontSize: 12,
@@ -707,24 +679,20 @@ const styles = StyleSheet.create({
         height: 50,
         borderRadius: 25,
         borderWidth: 1,
-        borderColor: colors.primary,
         borderStyle: 'dashed',
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: colors.primaryLight + '10',
     } as ViewStyle,
     removeMemberBtn: {
         position: 'absolute',
         top: -4,
         right: 0,
-        backgroundColor: colors.surface, // Match background to create "cutout" effect
         borderRadius: 12,
         width: 20,
         height: 20,
         justifyContent: 'center',
         alignItems: 'center',
         borderWidth: 1,
-        borderColor: colors.error,
         zIndex: 10,
         ...layout.shadows.small,
     } as ViewStyle,
@@ -740,11 +708,9 @@ const styles = StyleSheet.create({
         zIndex: 1000,
     } as ViewStyle,
     modalContent: {
-        backgroundColor: colors.surface,
         borderRadius: layout.borderRadius.l,
         padding: layout.spacing.l,
         borderWidth: 1,
-        borderColor: colors.border,
         width: '100%',
         maxHeight: '80%',
     } as ViewStyle,
@@ -756,7 +722,6 @@ const styles = StyleSheet.create({
     } as ViewStyle,
     modalTitle: {
         ...(typography.h3 as TextStyle),
-        color: colors.textPrimary,
     } as TextStyle,
     contactItem: {
         flexDirection: 'row',
@@ -764,20 +729,15 @@ const styles = StyleSheet.create({
         paddingVertical: layout.spacing.m,
         paddingHorizontal: layout.spacing.s,
         borderBottomWidth: 1,
-        borderBottomColor: colors.border,
         justifyContent: 'space-between',
     } as ViewStyle,
     selectedContactItem: {
-        backgroundColor: colors.surfaceLight,
     } as ViewStyle,
     contactName: {
         ...(typography.body1 as TextStyle),
-        color: colors.textPrimary,
         marginLeft: layout.spacing.m,
     } as TextStyle,
     settlementItem: {
-        backgroundColor: 'rgba(52, 199, 89, 0.05)', // Subtle green tint
-        borderColor: 'rgba(52, 199, 89, 0.15)',
     } as ViewStyle,
     settlementRow: {
         flexDirection: 'row',
@@ -787,10 +747,8 @@ const styles = StyleSheet.create({
         width: 40,
         height: 40,
         borderRadius: 20,
-        backgroundColor: colors.surface,
         justifyContent: 'center',
         alignItems: 'center',
         borderWidth: 1,
-        borderColor: colors.border,
     } as ViewStyle,
 });

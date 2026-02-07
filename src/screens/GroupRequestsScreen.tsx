@@ -6,7 +6,8 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { ScreenWrapper } from '../components/ScreenWrapper';
 import { Avatar } from '../components/Avatar';
 import { GradientButton } from '../components/GradientButton';
-import { colors, gradients } from '../theme/colors';
+import { useTheme } from '../context/ThemeContext';
+import { gradients } from '../theme/colors';
 import { typography } from '../theme/typography';
 import { layout } from '../theme/layout';
 import { RootStackParamList } from '../navigation/types';
@@ -17,6 +18,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'GroupRequests'>;
 export const GroupRequestsScreen: React.FC<Props> = ({ navigation, route }) => {
     const { group: initialGroup } = route.params;
     const { user, groups, getGroupRequests, createRequest, deleteRequest } = useContext(FirebaseContext);
+    const { colors } = useTheme();
 
     // Use live group data from context if available, otherwise fallback to initial params
     const group = groups.find(g => g.id === initialGroup.id) || initialGroup;
@@ -111,18 +113,12 @@ export const GroupRequestsScreen: React.FC<Props> = ({ navigation, route }) => {
         const creator = group.members.find(m => m.id === item.createdBy);
         const requestMembers = group.members.filter(m => item.memberIds.includes(m.id));
 
-        // Mock payment status for now, or calculate if we had expenses
-        // Logic: count expenses in this request where 'paidBy' is a member and type is 'settlement' or just expense contribution?
-        // User wants "1/2 paid". This implies members who have "paid their share".
-        // For now, let's just show members count as "X members involved"
-        // But user explicitly asked for "1/2 paid".
-        // Let's use the 'membersPaid' field I added to interface, even if it's mock/empty for now.
         const paidCount = item.membersPaid?.length || 0;
         const totalMembers = requestMembers.length;
 
         return (
             <TouchableOpacity
-                style={styles.card}
+                style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}
                 onPress={() => navigation.navigate('GroupDashboard', { group, requestId: item.id, requestTitle: item.title })}
                 onLongPress={() => {
                     if (item.createdBy === user.id) {
@@ -137,8 +133,8 @@ export const GroupRequestsScreen: React.FC<Props> = ({ navigation, route }) => {
                     <View style={styles.userInfo}>
                         <Avatar source={{ uri: creator?.avatar }} size={40} />
                         <View style={{ marginLeft: 12 }}>
-                            <Text style={styles.userName}>{creator?.name || 'Unknown'}</Text>
-                            <Text style={styles.timeText}>Requested {item.createdAt?.toDate ? item.createdAt.toDate().toLocaleDateString() : 'Just now'}</Text>
+                            <Text style={[styles.userName, { color: colors.textPrimary }]}>{creator?.name || 'Unknown'}</Text>
+                            <Text style={[styles.timeText, { color: colors.textSecondary }]}>Requested {item.createdAt?.toDate ? item.createdAt.toDate().toLocaleDateString() : 'Just now'}</Text>
                         </View>
                     </View>
                     <View style={styles.amountBadge}>
@@ -147,14 +143,14 @@ export const GroupRequestsScreen: React.FC<Props> = ({ navigation, route }) => {
                 </View>
 
                 <View style={styles.cardBody}>
-                    <View style={styles.iconBox}>
-                        <Ionicons name={item.icon as any || "documents-outline"} size={24} color={colors.primaryLight} />
+                    <View style={[styles.iconBox, { backgroundColor: colors.primaryLight + '20', borderColor: colors.primaryLight + '40' }]}>
+                        <Ionicons name={item.icon as any || "documents-outline"} size={24} color={colors.primaryLight || colors.primary} />
                     </View>
-                    <Text style={styles.messageText}>{item.title}</Text>
+                    <Text style={[styles.messageText, { color: colors.textPrimary }]}>{item.title}</Text>
                 </View>
 
                 {/* Progress Bar */}
-                <View style={styles.progressContainer}>
+                <View style={[styles.progressContainer, { backgroundColor: colors.border }]}>
                     <View style={[styles.progressBar, { width: `${(paidCount / Math.max(totalMembers, 1)) * 100}%` }]} />
                 </View>
 
@@ -162,7 +158,7 @@ export const GroupRequestsScreen: React.FC<Props> = ({ navigation, route }) => {
                     <View style={styles.footerRow}>
                         <View style={styles.avatarRow}>
                             {requestMembers.slice(0, 5).map((member, index) => (
-                                <View key={member.id} style={[styles.avatarContainer, { marginLeft: index > 0 ? -12 : 0, zIndex: 10 - index }]}>
+                                <View key={member.id} style={[styles.avatarContainer, { borderColor: colors.surface, marginLeft: index > 0 ? -12 : 0, zIndex: 10 - index }]}>
                                     <Avatar source={{ uri: member.avatar }} size={24} />
                                 </View>
                             ))}
@@ -177,10 +173,10 @@ export const GroupRequestsScreen: React.FC<Props> = ({ navigation, route }) => {
     return (
         <ScreenWrapper>
             <View style={styles.header}>
-                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+                <TouchableOpacity onPress={() => navigation.goBack()} style={[styles.backButton, { backgroundColor: colors.surfaceHighlight }]}>
                     <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
                 </TouchableOpacity>
-                <Text style={styles.headerTitle}>{group.name}</Text>
+                <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>{group.name}</Text>
                 <View style={{ width: 40 }} />
             </View>
 
@@ -192,8 +188,8 @@ export const GroupRequestsScreen: React.FC<Props> = ({ navigation, route }) => {
                 ListEmptyComponent={
                     <View style={styles.emptyState}>
                         <Ionicons name="folder-open-outline" size={48} color={colors.textSecondary} />
-                        <Text style={styles.emptyText}>No requests yet</Text>
-                        <Text style={styles.emptySubtext}>Create one to start tracking expenses</Text>
+                        <Text style={[styles.emptyText, { color: colors.textPrimary }]}>No requests yet</Text>
+                        <Text style={[styles.emptySubtext, { color: colors.textSecondary }]}>Create one to start tracking expenses</Text>
                     </View>
                 }
             />
@@ -218,19 +214,19 @@ export const GroupRequestsScreen: React.FC<Props> = ({ navigation, route }) => {
                 visible={modalVisible}
                 onRequestClose={() => setModalVisible(false)}
             >
-                <View style={styles.modalOverlay}>
-                    <View style={styles.modalContent}>
-                        <Text style={styles.modalTitle}>New Request</Text>
+                <View style={[styles.modalOverlay, { backgroundColor: 'rgba(0,0,0,0.8)' }]}>
+                    <View style={[styles.modalContent, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                        <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>New Request</Text>
 
                         <TextInput
-                            style={styles.input}
+                            style={[styles.input, { backgroundColor: colors.background, color: colors.textPrimary, borderColor: colors.border }]}
                             placeholder="Request Title (e.g. Lunch, Petrol)"
                             placeholderTextColor={colors.textSecondary}
                             value={newRequestTitle}
                             onChangeText={setNewRequestTitle}
                         />
 
-                        <Text style={styles.sectionTitle}>Select Icon</Text>
+                        <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>Select Icon</Text>
                         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.iconScroll}>
                             {REQUEST_ICONS.map((icon) => (
                                 <TouchableOpacity
@@ -238,25 +234,25 @@ export const GroupRequestsScreen: React.FC<Props> = ({ navigation, route }) => {
                                     style={[styles.iconOption, selectedIcon === icon.name && styles.selectedIconOption]}
                                     onPress={() => setSelectedIcon(icon.name)}
                                 >
-                                    <View style={[styles.iconCircle, selectedIcon === icon.name && styles.selectedIconCircle]}>
+                                    <View style={[styles.iconCircle, { backgroundColor: colors.surfaceHighlight, borderColor: colors.border }, selectedIcon === icon.name && { backgroundColor: colors.primary, borderColor: colors.primaryLight }]}>
                                         <Ionicons name={icon.name as any} size={24} color={selectedIcon === icon.name ? "#FFF" : colors.textSecondary} />
                                     </View>
-                                    <Text style={[styles.iconLabel, selectedIcon === icon.name && styles.selectedIconLabel]}>{icon.label}</Text>
+                                    <Text style={[styles.iconLabel, { color: colors.textSecondary }, selectedIcon === icon.name && { color: colors.primaryLight }]}>{icon.label}</Text>
                                 </TouchableOpacity>
                             ))}
                         </ScrollView>
 
-                        <Text style={styles.sectionTitle}>Select Members</Text>
+                        <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>Select Members</Text>
                         <ScrollView style={{ maxHeight: 200 }} nestedScrollEnabled>
                             {group.members.map(member => (
                                 <TouchableOpacity
                                     key={member.id}
-                                    style={[styles.memberRow, selectedMembers.includes(member.id) && styles.selectedMemberRow]}
+                                    style={[styles.memberRow, { backgroundColor: colors.surfaceHighlight + '10' }, selectedMembers.includes(member.id) && { backgroundColor: colors.primary + '20', borderColor: colors.primary + '50' }]}
                                     onPress={() => toggleMemberSelection(member.id)}
                                 >
                                     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                                         <Avatar source={{ uri: member.avatar }} size={32} />
-                                        <Text style={[styles.memberName, selectedMembers.includes(member.id) && styles.selectedMemberName]}>
+                                        <Text style={[styles.memberName, { color: colors.textPrimary }, selectedMembers.includes(member.id) && { color: colors.textPrimary }]}>
                                             {member.id === user.id ? 'You' : member.name}
                                         </Text>
                                     </View>
@@ -268,8 +264,8 @@ export const GroupRequestsScreen: React.FC<Props> = ({ navigation, route }) => {
                         </ScrollView>
 
                         <View style={styles.modalButtons}>
-                            <TouchableOpacity style={styles.cancelButton} onPress={() => setModalVisible(false)}>
-                                <Text style={styles.cancelButtonText}>Cancel</Text>
+                            <TouchableOpacity style={[styles.cancelButton, { borderColor: colors.border }]} onPress={() => setModalVisible(false)}>
+                                <Text style={[styles.cancelButtonText, { color: colors.textSecondary }]}>Cancel</Text>
                             </TouchableOpacity>
                             <GradientButton
                                 title="Create"
@@ -300,11 +296,9 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         borderRadius: layout.borderRadius.round,
-        backgroundColor: colors.surfaceHighlight,
     } as ViewStyle,
     headerTitle: {
         ...(typography.h3 as TextStyle),
-        color: colors.textPrimary,
         fontWeight: 'bold',
         fontSize: 20,
     } as TextStyle,
@@ -313,12 +307,10 @@ const styles = StyleSheet.create({
         paddingBottom: 100,
     } as ViewStyle,
     card: {
-        backgroundColor: 'rgba(30, 41, 59, 0.7)', // Glass-like surface
         borderRadius: layout.borderRadius.xl,
         padding: layout.spacing.l,
         marginBottom: layout.spacing.m,
         borderWidth: 1,
-        borderColor: 'rgba(255, 255, 255, 0.08)',
         flexDirection: 'column',
     } as ViewStyle,
     cardHeader: {
@@ -333,12 +325,10 @@ const styles = StyleSheet.create({
     } as ViewStyle,
     userName: {
         ...(typography.body2 as TextStyle),
-        color: colors.textPrimary,
         fontWeight: '700',
     } as TextStyle,
     timeText: {
         ...(typography.caption as TextStyle),
-        color: colors.textSecondary,
         fontSize: 11,
     } as TextStyle,
     amountBadge: {
@@ -352,7 +342,7 @@ const styles = StyleSheet.create({
     amountText: {
         fontSize: 12,
         fontWeight: 'bold',
-        color: colors.success,
+        color: '#10B981', // Always green
     } as TextStyle,
     cardBody: {
         flexDirection: 'row',
@@ -363,30 +353,26 @@ const styles = StyleSheet.create({
         width: 40,
         height: 40,
         borderRadius: 12,
-        backgroundColor: 'rgba(99, 102, 241, 0.1)',
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: 12,
         borderWidth: 1,
-        borderColor: 'rgba(99, 102, 241, 0.2)',
     } as ViewStyle,
     messageText: {
         ...(typography.h3 as TextStyle),
-        color: colors.textPrimary,
         fontWeight: '600',
         fontSize: 18,
         flex: 1,
     } as TextStyle,
     progressContainer: {
         height: 4,
-        backgroundColor: 'rgba(255,255,255,0.1)',
         borderRadius: 2,
         marginBottom: layout.spacing.m,
         overflow: 'hidden',
     } as ViewStyle,
     progressBar: {
         height: '100%',
-        backgroundColor: colors.success,
+        backgroundColor: '#10B981',
         borderRadius: 2,
     } as ViewStyle,
     footerRow: {
@@ -401,23 +387,19 @@ const styles = StyleSheet.create({
     } as ViewStyle,
     avatarContainer: {
         borderWidth: 2,
-        borderColor: colors.surface, // Match card bg somewhat or just dark
         borderRadius: 12,
     } as ViewStyle,
     moreAvatar: {
         width: 24,
         height: 24,
         borderRadius: 12,
-        backgroundColor: colors.surfaceHighlight,
         justifyContent: 'center',
         alignItems: 'center',
         borderWidth: 2,
-        borderColor: colors.background,
     } as ViewStyle,
     moreAvatarText: {
         fontSize: 10,
         fontWeight: 'bold',
-        color: colors.textPrimary,
     } as TextStyle,
     emptyState: {
         alignItems: 'center',
@@ -427,12 +409,10 @@ const styles = StyleSheet.create({
     } as ViewStyle,
     emptyText: {
         ...(typography.h3 as TextStyle),
-        color: colors.textPrimary,
         marginTop: layout.spacing.l,
     } as TextStyle,
     emptySubtext: {
         ...(typography.body2 as TextStyle),
-        color: colors.textSecondary,
         marginTop: 8,
         textAlign: 'center',
         width: '70%',
@@ -442,7 +422,7 @@ const styles = StyleSheet.create({
         bottom: 30,
         right: 30,
         borderRadius: 30,
-        shadowColor: colors.primary,
+        shadowColor: '#000',
         shadowOffset: { width: 0, height: 8 },
         shadowOpacity: 0.5,
         shadowRadius: 16,
@@ -459,17 +439,14 @@ const styles = StyleSheet.create({
     } as ViewStyle,
     modalOverlay: {
         flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.8)', // Darker overlay
         justifyContent: 'flex-end', // Bottom sheet style? Or center? Center is fine.
         padding: layout.spacing.m,
     } as ViewStyle,
     modalContent: {
-        backgroundColor: '#1E293B', // Slate 800
         borderRadius: layout.borderRadius.xl,
         padding: layout.spacing.xl,
         maxHeight: '85%',
         borderWidth: 1,
-        borderColor: colors.border,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 0 },
         shadowOpacity: 0.5,
@@ -478,23 +455,18 @@ const styles = StyleSheet.create({
     } as ViewStyle,
     modalTitle: {
         ...(typography.h2 as TextStyle),
-        color: colors.textPrimary,
         marginBottom: layout.spacing.xl,
         textAlign: 'center',
     } as TextStyle,
     input: {
-        backgroundColor: colors.surface,
         borderRadius: layout.borderRadius.l,
         padding: layout.spacing.m,
-        color: colors.textPrimary,
         borderWidth: 1,
-        borderColor: colors.border,
         marginBottom: layout.spacing.xl,
         fontSize: 16,
     } as TextStyle,
     sectionTitle: {
         ...(typography.caption as TextStyle),
-        color: colors.textSecondary,
         fontWeight: '700',
         marginBottom: layout.spacing.m,
         textTransform: 'uppercase',
@@ -514,28 +486,22 @@ const styles = StyleSheet.create({
         width: 56,
         height: 56,
         borderRadius: 28,
-        backgroundColor: colors.surfaceHighlight,
         justifyContent: 'center',
         alignItems: 'center',
         borderWidth: 1,
-        borderColor: colors.border,
         marginBottom: 8,
     } as ViewStyle,
     selectedIconCircle: {
-        backgroundColor: colors.primary,
-        borderColor: colors.primaryLight,
-        shadowColor: colors.primary,
+        shadowColor: '#4F46E5',
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
         shadowRadius: 8,
     } as ViewStyle,
     iconLabel: {
         fontSize: 11,
-        color: colors.textSecondary,
         fontWeight: '600',
     } as TextStyle,
     selectedIconLabel: {
-        color: colors.primaryLight,
         fontWeight: 'bold',
     } as TextStyle,
     memberRow: {
@@ -546,21 +512,18 @@ const styles = StyleSheet.create({
         paddingHorizontal: layout.spacing.m,
         borderRadius: layout.borderRadius.m,
         marginBottom: 4,
-        backgroundColor: 'rgba(255,255,255,0.02)',
+        borderWidth: 1,
+        borderColor: 'transparent',
     } as ViewStyle,
     selectedMemberRow: {
-        backgroundColor: 'rgba(99, 102, 241, 0.1)',
-        borderColor: 'rgba(99, 102, 241, 0.3)',
         borderWidth: 1,
     } as ViewStyle,
     memberName: {
         marginLeft: 12,
         ...(typography.body1 as TextStyle),
-        color: colors.textPrimary,
         fontWeight: '500',
     } as TextStyle,
     selectedMemberName: {
-        color: '#FFF',
         fontWeight: '600',
     } as TextStyle,
     modalButtons: {
@@ -574,13 +537,11 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         borderWidth: 1,
-        borderColor: colors.border,
         borderRadius: layout.borderRadius.l,
         backgroundColor: 'transparent',
     } as ViewStyle,
     cancelButtonText: {
         ...(typography.button as TextStyle),
-        color: colors.textSecondary,
         fontWeight: '600',
     } as TextStyle,
 });

@@ -6,7 +6,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { ScreenWrapper } from '../components/ScreenWrapper';
 import { Input } from '../components/Input';
 import { GradientButton } from '../components/GradientButton';
-import { colors } from '../theme/colors';
+import { useTheme } from '../context/ThemeContext';
 import { typography } from '../theme/typography';
 import { layout } from '../theme/layout';
 import { FirebaseContext } from '../context/FirebaseContext';
@@ -18,6 +18,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'CreateGroup'>;
 
 export const CreateGroupScreen: React.FC<Props> = ({ navigation }) => {
     const { createGroup } = React.useContext(FirebaseContext); // Import Context
+    const { colors } = useTheme();
     const [groupName, setGroupName] = useState('');
     const [image, setImage] = useState<string | null>(null);
     const [loading, setLoading] = useState(false);
@@ -66,17 +67,17 @@ export const CreateGroupScreen: React.FC<Props> = ({ navigation }) => {
                 <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
                     <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
                 </TouchableOpacity>
-                <Text style={styles.headerTitle}>Create New Group</Text>
+                <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Create New Group</Text>
             </View>
 
             <View style={styles.content}>
-                <TouchableOpacity onPress={pickImage} style={styles.imagePicker}>
+                <TouchableOpacity onPress={pickImage} style={[styles.imagePicker, { backgroundColor: colors.surface }]}>
                     {image ? (
                         <Image source={{ uri: image }} style={styles.image as any} />
                     ) : (
-                        <View style={styles.placeholder}>
+                        <View style={[styles.placeholder, { backgroundColor: colors.surface, borderColor: colors.border }]}>
                             <Ionicons name="camera" size={32} color={colors.textSecondary} />
-                            <Text style={styles.placeholderText}>Add Photo</Text>
+                            <Text style={[styles.placeholderText, { color: colors.textSecondary }]}>Add Photo</Text>
                         </View>
                     )}
                 </TouchableOpacity>
@@ -95,7 +96,7 @@ export const CreateGroupScreen: React.FC<Props> = ({ navigation }) => {
                     disabled={!groupName}
                     style={styles.button}
                 />
-                {loading && <Text style={styles.statusText}>{status}</Text>}
+                {loading && <Text style={[styles.statusText, { color: colors.textSecondary }]}>{status}</Text>}
             </View>
         </ScreenWrapper>
     );
@@ -114,7 +115,6 @@ const styles = StyleSheet.create({
     } as ViewStyle,
     headerTitle: {
         ...(typography.h2 as TextStyle),
-        color: colors.textPrimary,
     } as TextStyle,
     content: {
         paddingHorizontal: layout.spacing.l,
@@ -122,27 +122,25 @@ const styles = StyleSheet.create({
     imagePicker: {
         alignSelf: 'center',
         marginBottom: layout.spacing.xl,
+        borderRadius: 50,
         ...layout.shadows.small,
     } as ViewStyle,
     image: {
         width: 100,
         height: 100,
         borderRadius: 50,
-    } as ViewStyle, // Use ImageStyle but ViewStyle is broadly compatible for basics
+    } as ViewStyle,
     placeholder: {
         width: 100,
         height: 100,
         borderRadius: 50,
-        backgroundColor: colors.surface,
         justifyContent: 'center',
         alignItems: 'center',
         borderWidth: 1,
-        borderColor: colors.border,
         borderStyle: 'dashed',
     } as ViewStyle,
     placeholderText: {
         ...(typography.caption as TextStyle),
-        color: colors.textSecondary,
         marginTop: layout.spacing.xs,
     } as TextStyle,
     button: {
@@ -151,7 +149,6 @@ const styles = StyleSheet.create({
     statusText: {
         textAlign: 'center',
         marginTop: layout.spacing.s,
-        color: colors.textSecondary,
         ...(typography.caption as TextStyle),
     } as TextStyle,
 });

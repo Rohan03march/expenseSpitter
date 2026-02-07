@@ -4,7 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { ScreenWrapper } from '../components/ScreenWrapper';
 import { Illustration } from '../components/Illustration';
-import { colors } from '../theme/colors';
+import { useTheme } from '../context/ThemeContext';
 import { typography } from '../theme/typography';
 import { layout } from '../theme/layout';
 import { RootStackParamList } from '../navigation/types';
@@ -35,6 +35,7 @@ const SLIDES = [
 ];
 
 export const IntroScreen: React.FC<Props> = ({ navigation }) => {
+    const { colors } = useTheme();
     const [currentIndex, setCurrentIndex] = useState(0);
     const flatListRef = useRef<FlatList>(null);
 
@@ -61,7 +62,7 @@ export const IntroScreen: React.FC<Props> = ({ navigation }) => {
         <ScreenWrapper>
             <View style={styles.header}>
                 <TouchableOpacity onPress={handleSkip}>
-                    <Text style={styles.skipText}>Skip</Text>
+                    <Text style={[styles.skipText, { color: colors.primary }]}>Skip</Text>
                 </TouchableOpacity>
             </View>
 
@@ -79,8 +80,8 @@ export const IntroScreen: React.FC<Props> = ({ navigation }) => {
                             <Illustration type={item.image} width={280} height={280} />
                         </View>
                         <View style={styles.textContainer}>
-                            <Text style={styles.title}>{item.title}</Text>
-                            <Text style={styles.description}>{item.description}</Text>
+                            <Text style={[styles.title, { color: colors.textPrimary }]}>{item.title}</Text>
+                            <Text style={[styles.description, { color: colors.textSecondary }]}>{item.description}</Text>
                         </View>
                     </View>
                 )}
@@ -93,13 +94,14 @@ export const IntroScreen: React.FC<Props> = ({ navigation }) => {
                             key={index}
                             style={[
                                 styles.dot,
-                                currentIndex === index && styles.activeDot
+                                { backgroundColor: colors.surfaceLight },
+                                currentIndex === index && { backgroundColor: colors.primary, width: 20 }
                             ]}
                         />
                     ))}
                 </View>
 
-                <TouchableOpacity style={styles.nextButton} onPress={handleNext}>
+                <TouchableOpacity style={[styles.nextButton, { backgroundColor: colors.primary }]} onPress={handleNext}>
                     <Text style={styles.nextButtonText}>
                         {currentIndex === SLIDES.length - 1 ? 'Get Started' : 'Next'}
                     </Text>
@@ -117,7 +119,6 @@ const styles = StyleSheet.create({
     } as ViewStyle,
     skipText: {
         ...(typography.body2 as TextStyle),
-        color: colors.primary,
         fontWeight: '600',
     } as TextStyle,
     slide: {
@@ -136,13 +137,11 @@ const styles = StyleSheet.create({
     } as ViewStyle,
     title: {
         ...(typography.h1 as TextStyle),
-        color: colors.textPrimary,
         textAlign: 'center',
         marginBottom: layout.spacing.m,
     } as TextStyle,
     description: {
         ...(typography.body1 as TextStyle),
-        color: colors.textSecondary,
         textAlign: 'center',
         lineHeight: 24,
     } as TextStyle,
@@ -160,14 +159,8 @@ const styles = StyleSheet.create({
         width: 8,
         height: 8,
         borderRadius: 4,
-        backgroundColor: colors.surfaceLight,
-    } as ViewStyle,
-    activeDot: {
-        backgroundColor: colors.primary,
-        width: 20,
     } as ViewStyle,
     nextButton: {
-        backgroundColor: colors.primary,
         paddingHorizontal: layout.spacing.l,
         paddingVertical: layout.spacing.m,
         borderRadius: layout.borderRadius.round,

@@ -7,7 +7,8 @@ import { ScreenWrapper } from '../components/ScreenWrapper';
 import { Input } from '../components/Input';
 import { GradientButton } from '../components/GradientButton';
 import { Avatar } from '../components/Avatar';
-import { colors, gradients } from '../theme/colors';
+import { useTheme } from '../context/ThemeContext';
+import { gradients } from '../theme/colors';
 import { typography } from '../theme/typography';
 import { layout } from '../theme/layout';
 import { RootStackParamList } from '../navigation/types';
@@ -18,6 +19,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'AddExpense'>;
 export const AddExpenseScreen: React.FC<Props> = ({ navigation, route }) => {
     const { group, expense, recipientId, amount: initialAmount, requestId, requestMemberIds, initialType } = route.params;
     const { addExpense, deleteExpense, currency, user, getGroupBalances } = useContext(FirebaseContext);
+    const { colors } = useTheme();
 
     const displayMembers = (group?.members || [])
         .filter((m: User) => !requestMemberIds || requestMemberIds.includes(m.id))
@@ -94,22 +96,22 @@ export const AddExpenseScreen: React.FC<Props> = ({ navigation, route }) => {
                 style={{ flex: 1 }}
                 behavior={Platform.OS === 'ios' ? 'padding' : undefined}
             >
-                <View style={styles.header}>
-                    <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+                <View style={[styles.header, { borderBottomColor: colors.border }]}>
+                    <TouchableOpacity onPress={() => navigation.goBack()} style={[styles.backButton, { backgroundColor: colors.surfaceHighlight }]}>
                         <Ionicons name="close" size={24} color={colors.textPrimary} />
                     </TouchableOpacity>
-                    <View style={styles.toggleContainer}>
+                    <View style={[styles.toggleContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
                         <TouchableOpacity
-                            style={[styles.toggleButton, type === 'expense' && styles.activeToggle]}
+                            style={[styles.toggleButton, type === 'expense' && { backgroundColor: colors.surfaceHighlight }]}
                             onPress={() => setType('expense')}
                         >
-                            <Text style={[styles.toggleText, type === 'expense' && styles.activeToggleText]}>Expense</Text>
+                            <Text style={[styles.toggleText, { color: type === 'expense' ? colors.textPrimary : colors.textSecondary }]}>Expense</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
-                            style={[styles.toggleButton, type === 'settlement' && styles.activeToggle]}
+                            style={[styles.toggleButton, type === 'settlement' && { backgroundColor: colors.surfaceHighlight }]}
                             onPress={() => setType('settlement')}
                         >
-                            <Text style={[styles.toggleText, type === 'settlement' && styles.activeToggleText]}>Settle Up</Text>
+                            <Text style={[styles.toggleText, { color: type === 'settlement' ? colors.textPrimary : colors.textSecondary }]}>Settle Up</Text>
                         </TouchableOpacity>
                     </View>
                     <View style={{ width: 40 }} />
@@ -118,24 +120,24 @@ export const AddExpenseScreen: React.FC<Props> = ({ navigation, route }) => {
                 <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
                     {/* Hero Amount Input */}
                     <View style={styles.amountSection}>
-                        <Text style={styles.currencyPrefix}>{currencySymbol}</Text>
+                        <Text style={[styles.currencyPrefix, { color: colors.textSecondary }]}>{currencySymbol}</Text>
                         <TextInput
                             value={amount}
                             onChangeText={setAmount}
                             placeholder="0"
                             placeholderTextColor={colors.textSecondary}
                             keyboardType="decimal-pad"
-                            style={styles.amountInput}
+                            style={[styles.amountInput, { color: colors.textPrimary }]}
                             autoFocus={!expense}
                         />
                     </View>
 
                     {type === 'expense' ? (
                         <>
-                            <View style={styles.inputGroup}>
-                                <Ionicons name="document-text-outline" size={24} color={colors.accent} style={styles.inputIcon as any} />
+                            <View style={[styles.inputGroup, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                                <Ionicons name="document-text-outline" size={24} color={colors.primary} style={styles.inputIcon as any} />
                                 <TextInput
-                                    style={styles.textInput}
+                                    style={[styles.textInput, { color: colors.textPrimary }]}
                                     placeholder="What is this for?"
                                     placeholderTextColor={colors.textSecondary}
                                     value={title}
@@ -144,16 +146,24 @@ export const AddExpenseScreen: React.FC<Props> = ({ navigation, route }) => {
                             </View>
 
                             <View style={styles.section}>
-                                <Text style={styles.sectionTitle}>PAID BY</Text>
+                                <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>PAID BY</Text>
                                 <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.horizontalScroll}>
                                     {displayMembers.map(member => (
                                         <TouchableOpacity
                                             key={member.id}
-                                            style={[styles.chip, paidBy === member.id && styles.activeChip]}
+                                            style={[
+                                                styles.chip,
+                                                { backgroundColor: colors.surface, borderColor: colors.border },
+                                                paidBy === member.id && { backgroundColor: colors.primaryLight + '20', borderColor: colors.primary }
+                                            ]}
                                             onPress={() => setPaidBy(member.id)}
                                         >
                                             <Avatar source={{ uri: member.avatar }} size={28} />
-                                            <Text style={[styles.chipText, paidBy === member.id && styles.activeChipText]}>
+                                            <Text style={[
+                                                styles.chipText,
+                                                { color: colors.textSecondary },
+                                                paidBy === member.id && { color: colors.primaryLight }
+                                            ]}>
                                                 {member.name}
                                             </Text>
                                         </TouchableOpacity>
@@ -162,7 +172,7 @@ export const AddExpenseScreen: React.FC<Props> = ({ navigation, route }) => {
                             </View>
 
                             <View style={styles.section}>
-                                <Text style={styles.sectionTitle}>SPLIT WITH</Text>
+                                <Text style={[styles.sectionTitle, { color: colors.textSecondary }]}>SPLIT WITH</Text>
                                 <View style={styles.splitList}>
                                     {displayMembers.map(member => {
                                         const isSelected = splitWith.includes(member.id);
@@ -173,15 +183,23 @@ export const AddExpenseScreen: React.FC<Props> = ({ navigation, route }) => {
                                         return (
                                             <TouchableOpacity
                                                 key={member.id}
-                                                style={[styles.splitRow, isSelected && styles.activeSplitRow]}
+                                                style={[
+                                                    styles.splitRow,
+                                                    { backgroundColor: colors.surface, borderColor: colors.border },
+                                                    isSelected && { borderColor: colors.primary, backgroundColor: colors.primaryLight + '10' }
+                                                ]}
                                                 onPress={() => toggleSplitMember(member.id)}
                                             >
                                                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
                                                     <Avatar source={{ uri: member.avatar }} size={36} />
                                                     <View>
-                                                        <Text style={[styles.splitName, isSelected && styles.activeSplitName]}>{member.name}</Text>
+                                                        <Text style={[
+                                                            styles.splitName,
+                                                            { color: colors.textPrimary },
+                                                            isSelected && { color: colors.primary }
+                                                        ]}>{member.name}</Text>
                                                         {isSelected && (
-                                                            <Text style={styles.splitAmount}>
+                                                            <Text style={[styles.splitAmount, { color: colors.success }]}>
                                                                 {(0).toLocaleString('en-US', { style: 'currency', currency }).replace(/\d/g, '').replace('.', '').trim()}
                                                                 {splitAmount.toFixed(2)}
                                                             </Text>
@@ -197,14 +215,13 @@ export const AddExpenseScreen: React.FC<Props> = ({ navigation, route }) => {
                         </>
                     ) : (
                         // Settlement UI
-                        // Settlement UI
                         <View style={{ marginTop: layout.spacing.l }}>
-                            <View style={styles.settlementCard}>
+                            <View style={[styles.settlementCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
                                 <View style={styles.settlementUserCol}>
-                                    <Text style={styles.settlementLabel}>Payer</Text>
+                                    <Text style={[styles.settlementLabel, { color: colors.textSecondary }]}>Payer</Text>
                                     <View style={styles.settlementAvatarContainer}>
                                         <Avatar source={{ uri: displayMembers.find(m => m.id === paidBy)?.avatar || '' }} size={64} />
-                                        <Text style={styles.settlementUserName} numberOfLines={1}>
+                                        <Text style={[styles.settlementUserName, { color: colors.textPrimary }]} numberOfLines={1}>
                                             {displayMembers.find(m => m.id === paidBy)?.name}
                                         </Text>
                                     </View>
@@ -226,17 +243,17 @@ export const AddExpenseScreen: React.FC<Props> = ({ navigation, route }) => {
                                 </TouchableOpacity>
 
                                 <View style={styles.settlementUserCol}>
-                                    <Text style={styles.settlementLabel}>Recipient</Text>
+                                    <Text style={[styles.settlementLabel, { color: colors.textSecondary }]}>Recipient</Text>
                                     <View style={styles.settlementAvatarContainer}>
                                         {recipient ? (
                                             <>
                                                 <Avatar source={{ uri: displayMembers.find(m => m.id === recipient)?.avatar || '' }} size={64} />
-                                                <Text style={styles.settlementUserName} numberOfLines={1}>
+                                                <Text style={[styles.settlementUserName, { color: colors.textPrimary }]} numberOfLines={1}>
                                                     {displayMembers.find(m => m.id === recipient)?.name}
                                                 </Text>
                                             </>
                                         ) : (
-                                            <View style={styles.emptyAvatar}>
+                                            <View style={[styles.emptyAvatar, { backgroundColor: colors.surfaceHighlight, borderColor: colors.primary }]}>
                                                 <Ionicons name="help" size={32} color={colors.primary} />
                                             </View>
                                         )}
@@ -244,7 +261,7 @@ export const AddExpenseScreen: React.FC<Props> = ({ navigation, route }) => {
                                 </View>
                             </View>
 
-                            <Text style={[styles.sectionTitle, { marginTop: layout.spacing.xl, marginBottom: layout.spacing.m }]}>
+                            <Text style={[styles.sectionTitle, { marginTop: layout.spacing.xl, marginBottom: layout.spacing.m, color: colors.textSecondary }]}>
                                 WHO ARE YOU SETTLING WITH?
                             </Text>
 
@@ -258,21 +275,21 @@ export const AddExpenseScreen: React.FC<Props> = ({ navigation, route }) => {
                                         ]}
                                         onPress={() => {
                                             setRecipient(member.id);
-                                            // Optional: Update title if user wants logic there
                                         }}
                                     >
                                         <Avatar source={{ uri: member.avatar }} size={48} />
                                         <Text
                                             style={[
                                                 styles.recipientName,
-                                                recipient === member.id && styles.activeRecipientName
+                                                { color: colors.textSecondary },
+                                                recipient === member.id && { color: colors.primary, fontWeight: 'bold' }
                                             ]}
                                             numberOfLines={1}
                                         >
                                             {member.name}
                                         </Text>
                                         {recipient === member.id && (
-                                            <View style={styles.checkmarkBadge}>
+                                            <View style={[styles.checkmarkBadge, { backgroundColor: colors.primary, borderColor: colors.surface }]}>
                                                 <Ionicons name="checkmark" size={12} color="#FFF" />
                                             </View>
                                         )}
@@ -283,7 +300,7 @@ export const AddExpenseScreen: React.FC<Props> = ({ navigation, route }) => {
                     )}
                 </ScrollView>
 
-                <View style={styles.footer}>
+                <View style={[styles.footer, { backgroundColor: colors.background, borderTopColor: colors.border }]}>
                     <GradientButton
                         title={type === 'settlement' ? "Settle Up" : "Save Expense"}
                         onPress={handleCreate}
@@ -293,7 +310,7 @@ export const AddExpenseScreen: React.FC<Props> = ({ navigation, route }) => {
                     />
                     {expense && (
                         <TouchableOpacity style={styles.deleteLink} onPress={() => { deleteExpense(expense.id); navigation.goBack(); }}>
-                            <Text style={styles.deleteText}>Delete Expense</Text>
+                            <Text style={[styles.deleteText, { color: colors.error }]}>Delete Expense</Text>
                         </TouchableOpacity>
                     )}
                 </View>
@@ -311,33 +328,26 @@ const styles = StyleSheet.create({
         paddingVertical: layout.spacing.m,
     } as ViewStyle,
     backButton: {
-        padding: layout.spacing.s,
+        width: 40,
+        height: 40,
+        justifyContent: 'center',
+        alignItems: 'center',
         borderRadius: layout.borderRadius.round,
-        backgroundColor: colors.surfaceHighlight,
     } as ViewStyle,
     toggleContainer: {
         flexDirection: 'row',
-        backgroundColor: colors.surface,
         borderRadius: layout.borderRadius.l,
         padding: 4,
         borderWidth: 1,
-        borderColor: colors.border,
     } as ViewStyle,
     toggleButton: {
         paddingVertical: 8,
         paddingHorizontal: 20,
         borderRadius: layout.borderRadius.m,
     } as ViewStyle,
-    activeToggle: {
-        backgroundColor: colors.surfaceHighlight,
-    } as ViewStyle,
     toggleText: {
         ...(typography.caption as TextStyle),
-        color: colors.textSecondary,
         fontWeight: '600',
-    } as TextStyle,
-    activeToggleText: {
-        color: colors.textPrimary,
     } as TextStyle,
     content: {
         paddingHorizontal: layout.spacing.l,
@@ -346,34 +356,29 @@ const styles = StyleSheet.create({
     amountSection: {
         flexDirection: 'row',
         justifyContent: 'center',
-        alignItems: 'center', // Changed from flex-start to center for vertical alignment
+        alignItems: 'center',
         marginVertical: layout.spacing.xl,
     } as ViewStyle,
     currencyPrefix: {
         fontSize: 40,
         fontWeight: '300',
-        color: colors.textSecondary,
         marginRight: 8,
-        // Remove lineHeight or marginTop if possible to let flex align them
     } as TextStyle,
     amountInput: {
-        fontSize: 64, // Huge font
+        fontSize: 64,
         fontWeight: '700',
-        color: colors.textPrimary,
         minWidth: 100,
         textAlign: 'center',
-        padding: 0, // Reset padding
+        padding: 0,
     } as TextStyle,
     inputGroup: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: colors.surface,
         borderRadius: layout.borderRadius.l,
         paddingHorizontal: layout.spacing.m,
         paddingVertical: layout.spacing.m,
         marginBottom: layout.spacing.l,
         borderWidth: 1,
-        borderColor: colors.border,
     } as ViewStyle,
     inputIcon: {
         marginRight: layout.spacing.m,
@@ -381,14 +386,12 @@ const styles = StyleSheet.create({
     textInput: {
         flex: 1,
         ...(typography.body1 as TextStyle),
-        color: colors.textPrimary,
     } as TextStyle,
     section: {
         marginBottom: layout.spacing.l,
     } as ViewStyle,
     sectionTitle: {
         ...(typography.caption as TextStyle),
-        color: colors.textSecondary,
         marginBottom: layout.spacing.m,
         fontWeight: '700',
         letterSpacing: 1,
@@ -399,26 +402,16 @@ const styles = StyleSheet.create({
     chip: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: colors.surface,
         paddingVertical: 8,
         paddingHorizontal: 12,
         borderRadius: layout.borderRadius.l,
         marginRight: layout.spacing.s,
         borderWidth: 1,
-        borderColor: colors.border,
-    } as ViewStyle,
-    activeChip: {
-        backgroundColor: 'rgba(99, 102, 241, 0.15)',
-        borderColor: colors.primary,
     } as ViewStyle,
     chipText: {
         marginLeft: 8,
         ...(typography.caption as TextStyle),
-        color: colors.textSecondary,
         fontWeight: '600',
-    } as TextStyle,
-    activeChipText: {
-        color: colors.primaryLight,
     } as TextStyle,
     splitList: {
         gap: layout.spacing.s,
@@ -427,28 +420,16 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        backgroundColor: colors.surface,
         padding: layout.spacing.m,
         borderRadius: layout.borderRadius.m,
         borderWidth: 1,
-        borderColor: colors.border,
-    } as ViewStyle,
-    activeSplitRow: {
-        borderColor: colors.primary,
-        backgroundColor: 'rgba(99, 102, 241, 0.05)',
     } as ViewStyle,
     splitName: {
         ...(typography.body1 as TextStyle),
-        color: colors.textPrimary,
         fontWeight: '500',
-    } as TextStyle,
-    activeSplitName: {
-        color: colors.primary,
-        fontWeight: '600',
     } as TextStyle,
     splitAmount: {
         ...(typography.caption as TextStyle),
-        color: colors.success,
         marginTop: 2,
         fontWeight: '600',
     } as TextStyle,
@@ -456,11 +437,9 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        backgroundColor: colors.surface,
         padding: layout.spacing.xl,
         borderRadius: layout.borderRadius.xl,
         borderWidth: 1,
-        borderColor: colors.border,
     } as ViewStyle,
     settlementUserCol: {
         alignItems: 'center',
@@ -468,7 +447,6 @@ const styles = StyleSheet.create({
     } as ViewStyle,
     settlementLabel: {
         ...(typography.caption as TextStyle),
-        color: colors.textSecondary,
         marginBottom: layout.spacing.m,
         textTransform: 'uppercase',
     } as TextStyle,
@@ -478,7 +456,6 @@ const styles = StyleSheet.create({
     settlementUserName: {
         marginTop: layout.spacing.s,
         ...(typography.body2 as TextStyle),
-        color: colors.textPrimary,
         fontWeight: '600',
         textAlign: 'center',
     } as TextStyle,
@@ -498,16 +475,13 @@ const styles = StyleSheet.create({
         width: 64,
         height: 64,
         borderRadius: 32,
-        backgroundColor: colors.surfaceHighlight,
         justifyContent: 'center',
         alignItems: 'center',
         borderWidth: 1,
-        borderColor: colors.primary,
         borderStyle: 'dashed',
     } as ViewStyle,
     selectText: {
         ...(typography.caption as TextStyle),
-        color: colors.primary,
         marginTop: 4,
         fontWeight: '600',
     } as TextStyle,
@@ -524,32 +498,23 @@ const styles = StyleSheet.create({
     recipientName: {
         marginTop: 8,
         ...(typography.caption as TextStyle),
-        color: colors.textSecondary,
         textAlign: 'center',
         width: '100%',
-    } as TextStyle,
-    activeRecipientName: {
-        color: colors.primary,
-        fontWeight: 'bold',
     } as TextStyle,
     checkmarkBadge: {
         position: 'absolute',
         top: 0,
         right: 8,
-        backgroundColor: colors.primary,
         borderRadius: 10,
         width: 20,
         height: 20,
         justifyContent: 'center',
         alignItems: 'center',
         borderWidth: 2,
-        borderColor: colors.surface,
     } as ViewStyle,
     footer: {
         padding: layout.spacing.l,
         borderTopWidth: 1,
-        borderTopColor: colors.border,
-        backgroundColor: colors.background,
     } as ViewStyle,
     deleteLink: {
         alignItems: 'center',
@@ -557,6 +522,5 @@ const styles = StyleSheet.create({
     } as ViewStyle,
     deleteText: {
         ...(typography.button as TextStyle),
-        color: colors.error,
     } as TextStyle,
 });

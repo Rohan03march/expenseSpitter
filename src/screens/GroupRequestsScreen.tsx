@@ -33,6 +33,7 @@ export const GroupRequestsScreen: React.FC<Props> = ({ navigation, route }) => {
     // Default to all other members selected
     const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
     const [loading, setLoading] = useState(false);
+    const [activeTab, setActiveTab] = useState<'pending' | 'settled'>('pending');
 
     const REQUEST_ICONS = [
         { name: 'airplane', label: 'Trip' },
@@ -170,6 +171,20 @@ export const GroupRequestsScreen: React.FC<Props> = ({ navigation, route }) => {
         );
     };
 
+    const pendingRequests = requests.filter(req => {
+        const requestMembers = group.members.filter(m => req.memberIds.includes(m.id));
+        const paidCount = req.membersPaid?.length || 0;
+        return paidCount < requestMembers.length;
+    });
+
+    const settledRequests = requests.filter(req => {
+        const requestMembers = group.members.filter(m => req.memberIds.includes(m.id));
+        const paidCount = req.membersPaid?.length || 0;
+        return paidCount >= requestMembers.length;
+    });
+
+    const requestsToDisplay = activeTab === 'pending' ? pendingRequests : settledRequests;
+
     return (
         <ScreenWrapper>
             <View style={styles.header}>
@@ -180,16 +195,30 @@ export const GroupRequestsScreen: React.FC<Props> = ({ navigation, route }) => {
                 <View style={{ width: 40 }} />
             </View>
 
+            <View style={styles.tabContainer}>
+                <TouchableOpacity
+                    style={[styles.tab, activeTab === 'pending' && { backgroundColor: colors.primary, borderColor: colors.primary }]}
+                    onPress={() => setActiveTab('pending')}
+                >
+                    <Text style={[styles.tabText, { color: activeTab === 'pending' ? '#FFF' : colors.textSecondary }]}>Pending</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                    style={[styles.tab, activeTab === 'settled' && { backgroundColor: colors.primary, borderColor: colors.primary }]}
+                    onPress={() => setActiveTab('settled')}
+                >
+                    <Text style={[styles.tabText, { color: activeTab === 'settled' ? '#FFF' : colors.textSecondary }]}>Settled</Text>
+                </TouchableOpacity>
+            </View>
+
             <FlatList
-                data={requests}
+                data={requestsToDisplay}
                 renderItem={renderRequestItem}
                 keyExtractor={item => item.id}
                 contentContainerStyle={styles.listContent}
                 ListEmptyComponent={
                     <View style={styles.emptyState}>
                         <Ionicons name="folder-open-outline" size={48} color={colors.textSecondary} />
-                        <Text style={[styles.emptyText, { color: colors.textPrimary }]}>No requests yet</Text>
-                        <Text style={[styles.emptySubtext, { color: colors.textSecondary }]}>Create one to start tracking expenses</Text>
+                        <Text style={[styles.emptyText, { color: colors.textPrimary }]}>No {activeTab} requests</Text>
                     </View>
                 }
             />
@@ -302,6 +331,25 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         fontSize: 20,
     } as TextStyle,
+    tabContainer: {
+        flexDirection: 'row',
+        paddingHorizontal: layout.spacing.l,
+        marginBottom: layout.spacing.s,
+        gap: 12,
+    } as ViewStyle,
+    tab: {
+        flex: 1,
+        paddingVertical: 10,
+        borderRadius: layout.borderRadius.l,
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: 'rgba(156, 163, 175, 0.3)', // Default border
+    } as ViewStyle,
+    tabText: {
+        ...(typography.button as TextStyle),
+        fontWeight: '600',
+    } as TextStyle,
+
     listContent: {
         padding: layout.spacing.l,
         paddingBottom: 100,

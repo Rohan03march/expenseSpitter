@@ -37,6 +37,7 @@ export const AppNavigator = () => {
     return (
         <NavigationContainer>
             <Stack.Navigator
+                id="RootStack"
                 screenOptions={{ headerShown: false, animation: 'slide_from_right' }}
                 initialRouteName={user ? "GroupList" : "Login"}
             >

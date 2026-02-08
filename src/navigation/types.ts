@@ -19,6 +19,7 @@ export type RootStackParamList = {
     Profile: undefined;
     Chat: { group: Group };
     Balances: { group: Group };
+    ExpenseDetails: { group: Group; expense: Expense };
 };
 
 export type AuthScreenProps<T extends keyof RootStackParamList> = NativeStackScreenProps<RootStackParamList, T>;

@@ -16,6 +16,7 @@ import { ProfileScreen } from '../screens/ProfileScreen';
 import { ChatScreen } from '../screens/ChatScreen';
 import { BalancesScreen } from '../screens/BalancesScreen';
 import { CreateGroupScreen } from '../screens/CreateGroupScreen';
+import { ExpenseDetailsScreen } from '../screens/ExpenseDetailsScreen';
 import { IntroScreen } from '../screens/IntroScreen';
 import { WelcomeScreen } from '../screens/WelcomeScreen';
 import { RootStackParamList } from './types';
@@ -55,6 +56,7 @@ export const AppNavigator = () => {
                         <Stack.Screen name="Profile" component={ProfileScreen} />
                         <Stack.Screen name="Chat" component={ChatScreen} />
                         <Stack.Screen name="Balances" component={BalancesScreen} />
+                        <Stack.Screen name="ExpenseDetails" component={ExpenseDetailsScreen} />
                         {/* Intro and Welcome might be needed if logic requires them, but user is logged in here.
                             If strict auth flow, they might be accessible from Settings or conditional.
                             For now, let's add them to be safe if they are navigated to.

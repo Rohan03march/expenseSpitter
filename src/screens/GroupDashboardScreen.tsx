@@ -291,32 +291,43 @@ export const GroupDashboardScreen: React.FC<Props> = ({ route, navigation }) => 
 
                             renderContent = (
                                 <View style={styles.settlementRow}>
-                                    <View style={[styles.settlementIconBg, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-                                        <Ionicons name="swap-horizontal" size={20} color={colors.primary} />
-                                    </View>
-                                    <View style={{ flex: 1, marginLeft: layout.spacing.m }}>
-                                        <Text style={[styles.expenseTitle, { color: colors.textPrimary }]}>
-                                            <Text style={{ fontWeight: 'bold' }}>{payerName}</Text> paid <Text style={{ fontWeight: 'bold' }}>{recipientName}</Text>
+                                    {isRecipientMe ? (
+                                        <View style={[styles.mergedAvatarContainer, { marginRight: layout.spacing.m }]}>
+                                            <Avatar source={{ uri: payer?.avatar || 'https://i.pravatar.cc/150' }} size={32} style={{ zIndex: 1, borderWidth: 2, borderColor: colors.surface }} />
+                                            <View style={{ marginLeft: -12, zIndex: 2, borderWidth: 2, borderColor: colors.surface, borderRadius: 16 }}>
+                                                <Avatar source={{ uri: recipientMember?.avatar || 'https://i.pravatar.cc/150' }} size={32} />
+                                            </View>
+                                        </View>
+                                    ) : (
+                                        <View style={[styles.settlementIconBg, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                                            <Ionicons name="swap-horizontal" size={20} color={colors.primary} />
+                                        </View>
+                                    )}
+                                    <View style={{ flex: 1, marginLeft: isRecipientMe ? 0 : layout.spacing.m }}>
+                                        <Text style={[styles.expenseTitle, { color: colors.textPrimary }]} numberOfLines={1}>
+                                            <Text style={{ fontWeight: '700' }}>{payerName}</Text> paid <Text style={{ fontWeight: '700' }}>{recipientName}</Text>
                                         </Text>
                                         <Text style={[styles.dateText, { color: colors.textSecondary }]}>{dateString}</Text>
                                     </View>
-                                    <Text style={[styles.amountValue, { color: colors.success }]}>
-                                        {formatCurrency(expense.amount)}
-                                    </Text>
+                                    <View style={{ alignItems: 'flex-end', minWidth: 80 }}>
+                                        <Text style={[styles.amountValue, { color: colors.success, fontSize: 16 }]}>
+                                            {formatCurrency(expense.amount)}
+                                        </Text>
+                                    </View>
                                 </View>
                             );
                         } else {
                             renderContent = (
                                 <>
-                                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                                        <Text style={[styles.expenseTitle, { color: colors.textPrimary }]}>{expense.title}</Text>
-                                        <Text style={[styles.amountValue, { color: isMe ? colors.success : colors.error }]}>
-                                            {isMe ? '+' : '-'}{formatCurrency(expense.amount / Math.max(1, expense.splitWith.length))}
+                                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                                        <Text style={[styles.expenseTitle, { color: colors.textPrimary, fontSize: 16 }]} numberOfLines={1}>{expense.title}</Text>
+                                        <Text style={[styles.amountValue, { color: colors.error, fontSize: 16 }]}>
+                                            -{formatCurrency(expense.amount / Math.max(1, expense.splitWith.length))}
                                         </Text>
                                     </View>
 
-                                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 }}>
-                                        <Text style={[styles.expenseSubtitle, { color: colors.textSecondary }]}>
+                                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <Text style={[styles.expenseSubtitle, { color: colors.textSecondary, flex: 1, marginRight: 8 }]} numberOfLines={1}>
                                             <Text style={{ fontWeight: '600', color: colors.textPrimary }}>{isMe ? 'You' : payer?.name || 'Unknown'}</Text> paid {formatCurrency(expense.amount)}
                                         </Text>
                                         <Text style={[styles.dateText, { color: colors.textSecondary }]}>{dateString}</Text>
@@ -325,19 +336,16 @@ export const GroupDashboardScreen: React.FC<Props> = ({ route, navigation }) => 
                             );
                         }
 
+                        // The assignment above created renderContent. Now we use it.
                         return (
                             <TouchableOpacity
                                 key={expense.id}
                                 activeOpacity={0.7}
                                 onPress={() => {
-                                    const currentRequest = requestId ? groupRequests.find(r => r.id === requestId) : null;
-                                    const requestMemberIds = currentRequest ? currentRequest.memberIds : null;
-                                    navigation.navigate('AddExpense', { group, expense, requestMemberIds });
+                                    navigation.navigate('ExpenseDetails', { group, expense });
                                 }}
-                                style={[styles.expenseItem, { backgroundColor: colors.surface, borderColor: colors.border }, isSettlement && { backgroundColor: colors.primaryLight + '10', borderColor: colors.primaryLight + '30' }]}
+                                style={[styles.expenseItem, { backgroundColor: colors.surface, borderColor: colors.border }]}
                             >
-                                {!isSettlement && <Avatar source={{ uri: payer?.avatar || 'https://i.pravatar.cc/150' }} size={44} />}
-
                                 <View style={styles.expenseInfo}>
                                     {renderContent}
                                 </View>
@@ -353,31 +361,33 @@ export const GroupDashboardScreen: React.FC<Props> = ({ route, navigation }) => 
                     )}
                 </View>
 
-                {group.createdBy === currentUser?.id && !requestId && (
-                    <TouchableOpacity
-                        style={[styles.deleteGroupBtn, { borderColor: colors.error, backgroundColor: colors.error + '10' }]}
-                        onPress={() => {
-                            Alert.alert(
-                                "Delete Group",
-                                "Are you sure you want to delete this group?",
-                                [
-                                    { text: "No", style: "cancel" },
-                                    {
-                                        text: "Yes", style: "destructive", onPress: () => {
-                                            deleteGroup(group.id);
-                                            navigation.navigate('GroupList');
+                {
+                    group.createdBy === currentUser?.id && !requestId && (
+                        <TouchableOpacity
+                            style={[styles.deleteGroupBtn, { borderColor: colors.error, backgroundColor: colors.error + '10' }]}
+                            onPress={() => {
+                                Alert.alert(
+                                    "Delete Group",
+                                    "Are you sure you want to delete this group?",
+                                    [
+                                        { text: "No", style: "cancel" },
+                                        {
+                                            text: "Yes", style: "destructive", onPress: () => {
+                                                deleteGroup(group.id);
+                                                navigation.navigate('GroupList');
+                                            }
                                         }
-                                    }
-                                ]
-                            );
-                        }}
-                    >
-                        <Ionicons name="trash-outline" size={24} color={colors.error} />
-                        <Text style={[styles.deleteGroupText, { color: colors.error }]}>Delete Group</Text>
-                    </TouchableOpacity>
-                )}
+                                    ]
+                                );
+                            }}
+                        >
+                            <Ionicons name="trash-outline" size={24} color={colors.error} />
+                            <Text style={[styles.deleteGroupText, { color: colors.error }]}>Delete Group</Text>
+                        </TouchableOpacity>
+                    )
+                }
 
-            </ScrollView>
+            </ScrollView >
 
             {(!requestId || (requestId && groupRequests.find(r => r.id === requestId)?.createdBy === currentUser?.id)) && (
                 <TouchableOpacity
@@ -392,85 +402,87 @@ export const GroupDashboardScreen: React.FC<Props> = ({ route, navigation }) => 
                 </TouchableOpacity>
             )}
 
-            {showAddMemberModal && (
-                <View style={styles.modalOverlay}>
-                    <GlassView style={[styles.modalContent, { backgroundColor: colors.surface, borderColor: colors.border }]} intensity={95}>
-                        <View style={styles.modalHeader}>
-                            <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Add Member</Text>
-                            <TouchableOpacity onPress={() => { setShowAddMemberModal(false); setSearchQuery(''); setFoundUser(null); }}>
-                                <Ionicons name="close" size={24} color={colors.textPrimary} />
-                            </TouchableOpacity>
-                        </View>
-
-                        {!foundUser ? (
-                            <>
-                                <Input
-                                    placeholder="Enter email address..."
-                                    value={searchQuery}
-                                    onChangeText={setSearchQuery}
-                                    autoCapitalize="none"
-                                    keyboardType="email-address"
-                                    style={{ marginBottom: layout.spacing.m }}
-                                />
-                                <GradientButton
-                                    title={isSearching ? "Searching..." : "Search"}
-                                    onPress={handleSearchUser}
-                                    disabled={!searchQuery || isSearching}
-                                    style={{ marginTop: layout.spacing.m }}
-                                />
-
-                                {requestId && (
-                                    <View style={{ marginTop: layout.spacing.l }}>
-                                        <Text style={{ color: colors.textSecondary, marginBottom: layout.spacing.s, fontWeight: 'bold' }}>Add Existing Group Member</Text>
-                                        <ScrollView style={{ maxHeight: 150 }}>
-                                            {group.members.map(member => (
-                                                <TouchableOpacity
-                                                    key={member.id}
-                                                    style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 8 }}
-                                                    onPress={async () => {
-                                                        await addMemberToRequest(requestId, member.id);
-                                                        Alert.alert("Success", `${member.name} added to request.`);
-                                                        setShowAddMemberModal(false);
-                                                    }}
-                                                >
-                                                    <Avatar source={{ uri: member.avatar }} size={32} />
-                                                    <Text style={{ color: colors.textPrimary, marginLeft: 10 }}>{member.name}</Text>
-                                                    <Ionicons name="add-circle-outline" size={20} color={colors.primary} style={{ marginLeft: 'auto' }} />
-                                                </TouchableOpacity>
-                                            ))}
-                                        </ScrollView>
-                                    </View>
-                                )}
-                            </>
-                        ) : (
-                            <View style={{ alignItems: 'center', marginVertical: layout.spacing.m }}>
-                                <Avatar source={{ uri: foundUser.avatar }} size={80} />
-                                <Text style={{ ...typography.h3 as TextStyle, color: colors.textPrimary, marginTop: layout.spacing.s }}>
-                                    {foundUser.name}
-                                </Text>
-                                <Text style={{ ...typography.body2 as TextStyle, color: colors.textSecondary, marginBottom: layout.spacing.l }}>
-                                    {foundUser.email}
-                                </Text>
-
-                                <View style={{ width: '100%', gap: layout.spacing.m }}>
-                                    <GradientButton
-                                        title={`Add ${foundUser.name}`}
-                                        onPress={handleAddMember}
-                                    />
-                                    <TouchableOpacity
-                                        onPress={() => setFoundUser(null)}
-                                        style={{ padding: layout.spacing.m, alignItems: 'center' }}
-                                    >
-                                        <Text style={{ color: colors.textSecondary }}>Search different user</Text>
-                                    </TouchableOpacity>
-                                </View>
+            {
+                showAddMemberModal && (
+                    <View style={styles.modalOverlay}>
+                        <GlassView style={[styles.modalContent, { backgroundColor: colors.surface, borderColor: colors.border }]} intensity={95}>
+                            <View style={styles.modalHeader}>
+                                <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Add Member</Text>
+                                <TouchableOpacity onPress={() => { setShowAddMemberModal(false); setSearchQuery(''); setFoundUser(null); }}>
+                                    <Ionicons name="close" size={24} color={colors.textPrimary} />
+                                </TouchableOpacity>
                             </View>
-                        )}
-                    </GlassView>
-                </View>
-            )}
 
-        </ScreenWrapper>
+                            {!foundUser ? (
+                                <>
+                                    <Input
+                                        placeholder="Enter email address..."
+                                        value={searchQuery}
+                                        onChangeText={setSearchQuery}
+                                        autoCapitalize="none"
+                                        keyboardType="email-address"
+                                        style={{ marginBottom: layout.spacing.m }}
+                                    />
+                                    <GradientButton
+                                        title={isSearching ? "Searching..." : "Search"}
+                                        onPress={handleSearchUser}
+                                        disabled={!searchQuery || isSearching}
+                                        style={{ marginTop: layout.spacing.m }}
+                                    />
+
+                                    {requestId && (
+                                        <View style={{ marginTop: layout.spacing.l }}>
+                                            <Text style={{ color: colors.textSecondary, marginBottom: layout.spacing.s, fontWeight: 'bold' }}>Add Existing Group Member</Text>
+                                            <ScrollView style={{ maxHeight: 150 }}>
+                                                {group.members.map(member => (
+                                                    <TouchableOpacity
+                                                        key={member.id}
+                                                        style={{ flexDirection: 'row', alignItems: 'center', paddingVertical: 8 }}
+                                                        onPress={async () => {
+                                                            await addMemberToRequest(requestId, member.id);
+                                                            Alert.alert("Success", `${member.name} added to request.`);
+                                                            setShowAddMemberModal(false);
+                                                        }}
+                                                    >
+                                                        <Avatar source={{ uri: member.avatar }} size={32} />
+                                                        <Text style={{ color: colors.textPrimary, marginLeft: 10 }}>{member.name}</Text>
+                                                        <Ionicons name="add-circle-outline" size={20} color={colors.primary} style={{ marginLeft: 'auto' }} />
+                                                    </TouchableOpacity>
+                                                ))}
+                                            </ScrollView>
+                                        </View>
+                                    )}
+                                </>
+                            ) : (
+                                <View style={{ alignItems: 'center', marginVertical: layout.spacing.m }}>
+                                    <Avatar source={{ uri: foundUser.avatar }} size={80} />
+                                    <Text style={{ ...typography.h3 as TextStyle, color: colors.textPrimary, marginTop: layout.spacing.s }}>
+                                        {foundUser.name}
+                                    </Text>
+                                    <Text style={{ ...typography.body2 as TextStyle, color: colors.textSecondary, marginBottom: layout.spacing.l }}>
+                                        {foundUser.email}
+                                    </Text>
+
+                                    <View style={{ width: '100%', gap: layout.spacing.m }}>
+                                        <GradientButton
+                                            title={`Add ${foundUser.name}`}
+                                            onPress={handleAddMember}
+                                        />
+                                        <TouchableOpacity
+                                            onPress={() => setFoundUser(null)}
+                                            style={{ padding: layout.spacing.m, alignItems: 'center' }}
+                                        >
+                                            <Text style={{ color: colors.textSecondary }}>Search different user</Text>
+                                        </TouchableOpacity>
+                                    </View>
+                                </View>
+                            )}
+                        </GlassView>
+                    </View>
+                )
+            }
+
+        </ScreenWrapper >
     );
 };
 
@@ -750,5 +762,10 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         borderWidth: 1,
+    } as ViewStyle,
+    mergedAvatarContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        width: 54,
     } as ViewStyle,
 });

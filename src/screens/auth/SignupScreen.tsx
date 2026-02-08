@@ -52,19 +52,11 @@ export const SignupScreen: React.FC<Props> = ({ navigation }) => {
                     keyboardShouldPersistTaps="handled"
                 >
                     <View style={styles.header}>
-                        <View style={styles.iconRow}>
-                            <View style={[styles.iconContainer, { backgroundColor: colors.surface, borderColor: colors.border, transform: [{ rotate: '-10deg' }], marginTop: 15 }]}>
-                                <Ionicons name="pie-chart-outline" size={32} color={colors.primary} />
-                            </View>
-                            <View style={[styles.iconContainer, styles.mainIcon, { backgroundColor: colors.surface, borderColor: colors.secondary + '40', zIndex: 10 }]}>
-                                <Ionicons name="person-add" size={48} color={colors.secondary} />
-                            </View>
-                            <View style={[styles.iconContainer, { backgroundColor: colors.surface, borderColor: colors.border, transform: [{ rotate: '10deg' }], marginTop: 15 }]}>
-                                <Ionicons name="trending-up" size={32} color={colors.success} />
-                            </View>
+                        <View style={[styles.logoContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                            <Ionicons name="person-add" size={40} color={colors.secondary} />
                         </View>
                         <Text style={[styles.title, { color: colors.textPrimary }]}>Create Account</Text>
-                        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Join us and start splitting expenses.</Text>
+                        <Text style={[styles.subtitle, { color: '#666' }]}>Join us and start splitting expenses.</Text>
                     </View>
 
                     <View style={styles.form}>
@@ -98,6 +90,21 @@ export const SignupScreen: React.FC<Props> = ({ navigation }) => {
                         />
                     </View>
 
+                    <View style={styles.dividerContainer}>
+                        <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
+                        <Text style={[styles.dividerText, { color: colors.textSecondary }]}>or join with</Text>
+                        <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
+                    </View>
+
+                    <View style={styles.socialRow}>
+                        <TouchableOpacity style={[styles.socialButton, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                            <Ionicons name="logo-google" size={24} color={colors.textPrimary} />
+                        </TouchableOpacity>
+                        <TouchableOpacity style={[styles.socialButton, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                            <Ionicons name="logo-apple" size={24} color={colors.textPrimary} />
+                        </TouchableOpacity>
+                    </View>
+
                     <View style={styles.footer}>
                         <Text style={[styles.footerText, { color: colors.textSecondary }]}>Already have an account? </Text>
                         <TouchableOpacity onPress={() => navigation.navigate('Login')}>
@@ -113,61 +120,85 @@ export const SignupScreen: React.FC<Props> = ({ navigation }) => {
 const styles = StyleSheet.create({
     scrollContent: {
         flexGrow: 1,
+        padding: layout.spacing.xl,
         justifyContent: 'center',
-        padding: layout.spacing.l,
     } as ViewStyle,
     header: {
+        marginBottom: layout.spacing.xxl,
         alignItems: 'center',
-        marginBottom: layout.spacing.xl,
     } as ViewStyle,
-    iconRow: {
-        flexDirection: 'row',
-        justifyContent: 'center',
-        gap: layout.spacing.m,
-        marginBottom: layout.spacing.l,
-    } as ViewStyle,
-    iconContainer: {
-        width: 60,
-        height: 60,
-        borderRadius: 30,
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderWidth: 1,
-        ...layout.shadows.small,
-    } as ViewStyle,
-    mainIcon: {
+    logoContainer: {
         width: 80,
         height: 80,
-        borderRadius: 40,
+        borderRadius: 24,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: layout.spacing.l,
         borderWidth: 1,
         ...layout.shadows.medium,
     } as ViewStyle,
     title: {
         ...(typography.h1 as TextStyle),
-        marginBottom: layout.spacing.s,
+        fontSize: 32,
+        marginBottom: layout.spacing.xs,
         textAlign: 'center',
     } as TextStyle,
     subtitle: {
         ...(typography.body1 as TextStyle),
+        color: '#666',
         textAlign: 'center',
+        marginBottom: layout.spacing.l,
     } as TextStyle,
     form: {
-        gap: layout.spacing.m,
+        gap: layout.spacing.l,
     } as ViewStyle,
     button: {
+        height: 56,
+        borderRadius: layout.borderRadius.l,
+        ...layout.shadows.small,
         marginTop: layout.spacing.m,
+    } as ViewStyle,
+    dividerContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginVertical: layout.spacing.xl,
+    } as ViewStyle,
+    dividerLine: {
+        flex: 1,
+        height: 1,
+    } as ViewStyle,
+    dividerText: {
+        paddingHorizontal: layout.spacing.m,
+        ...(typography.caption as TextStyle),
+        textTransform: 'uppercase',
+        letterSpacing: 1,
+    } as TextStyle,
+    socialRow: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        gap: layout.spacing.l,
+        marginBottom: layout.spacing.xl,
+    } as ViewStyle,
+    socialButton: {
+        width: 56,
+        height: 56,
+        borderRadius: 28,
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderWidth: 1,
+        ...layout.shadows.small,
     } as ViewStyle,
     footer: {
         flexDirection: 'row',
         justifyContent: 'center',
-        marginTop: layout.spacing.xl,
-        paddingBottom: 20,
+        marginTop: layout.spacing.m,
     } as ViewStyle,
     footerText: {
-        ...(typography.body2 as TextStyle),
+        ...(typography.body1 as TextStyle),
     } as TextStyle,
     linkText: {
-        ...(typography.body2 as TextStyle),
+        ...(typography.body1 as TextStyle),
         fontWeight: 'bold',
+        marginLeft: 4,
     } as TextStyle,
 });

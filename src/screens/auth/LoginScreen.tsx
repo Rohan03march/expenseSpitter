@@ -49,19 +49,11 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
                     keyboardShouldPersistTaps="handled"
                 >
                     <View style={styles.header}>
-                        <View style={styles.iconRow}>
-                            <View style={[styles.iconContainer, { backgroundColor: colors.surface, borderColor: colors.border, transform: [{ rotate: '-15deg' }], marginTop: 20 }]}>
-                                <Ionicons name="wallet-outline" size={32} color={colors.primary} />
-                            </View>
-                            <View style={[styles.iconContainer, styles.mainIcon, { backgroundColor: colors.surface, borderColor: colors.success + '40', zIndex: 10 }]}>
-                                <Ionicons name="cash" size={48} color={colors.success} />
-                            </View>
-                            <View style={[styles.iconContainer, { backgroundColor: colors.surface, borderColor: colors.border, transform: [{ rotate: '15deg' }], marginTop: 20 }]}>
-                                <Ionicons name="card-outline" size={32} color={colors.secondary} />
-                            </View>
+                        <View style={[styles.logoContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                            <Ionicons name="wallet" size={40} color={colors.primary} />
                         </View>
                         <Text style={[styles.title, { color: colors.textPrimary }]}>Welcome Back</Text>
-                        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Sign in to continue splitting bills.</Text>
+                        <Text style={[styles.subtitle, { color: '#666' }]}>Sign in to continue splitting bills.</Text>
                     </View>
 
                     <View style={styles.form}>
@@ -92,6 +84,21 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
                         />
                     </View>
 
+                    <View style={styles.dividerContainer}>
+                        <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
+                        <Text style={[styles.dividerText, { color: colors.textSecondary }]}>or continue with</Text>
+                        <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
+                    </View>
+
+                    <View style={styles.socialRow}>
+                        <TouchableOpacity style={[styles.socialButton, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                            <Ionicons name="logo-google" size={24} color={colors.textPrimary} />
+                        </TouchableOpacity>
+                        <TouchableOpacity style={[styles.socialButton, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                            <Ionicons name="logo-apple" size={24} color={colors.textPrimary} />
+                        </TouchableOpacity>
+                    </View>
+
                     <View style={styles.footer}>
                         <Text style={[styles.footerText, { color: colors.textSecondary }]}>Don't have an account? </Text>
                         <TouchableOpacity onPress={() => navigation.navigate('Signup')}>
@@ -100,75 +107,100 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
                     </View>
                 </ScrollView>
             </KeyboardAvoidingView>
-        </ScreenWrapper>
+        </ScreenWrapper >
     );
 };
 
 const styles = StyleSheet.create({
     scrollContent: {
         flexGrow: 1,
+        padding: layout.spacing.xl,
         justifyContent: 'center',
-        padding: layout.spacing.l,
     } as ViewStyle,
     header: {
-        alignItems: 'center',
-        marginBottom: layout.spacing.xl,
+        marginBottom: layout.spacing.xxl,
+        alignItems: 'center', // Centered for a balanced look
     } as ViewStyle,
-    iconRow: {
-        flexDirection: 'row',
-        justifyContent: 'center',
-        gap: layout.spacing.m,
-        marginBottom: layout.spacing.l,
-    } as ViewStyle,
-    iconContainer: {
-        width: 60,
-        height: 60,
-        borderRadius: 30,
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderWidth: 1,
-        ...layout.shadows.small,
-    } as ViewStyle,
-    mainIcon: {
+    logoContainer: {
         width: 80,
         height: 80,
-        borderRadius: 40,
+        borderRadius: 24, // Squircle
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: layout.spacing.l,
         borderWidth: 1,
-        ...layout.shadows.medium,
+        ...layout.shadows.medium, // Nice shadow
     } as ViewStyle,
     title: {
         ...(typography.h1 as TextStyle),
-        marginBottom: layout.spacing.s,
+        fontSize: 32,
+        marginBottom: layout.spacing.xs,
         textAlign: 'center',
     } as TextStyle,
     subtitle: {
         ...(typography.body1 as TextStyle),
+        color: '#666', // Explicit gray for subtitle is often cleaner
         textAlign: 'center',
+        marginBottom: layout.spacing.l,
     } as TextStyle,
     form: {
-        gap: layout.spacing.m,
+        gap: layout.spacing.l,
     } as ViewStyle,
     forgotPassword: {
         alignSelf: 'flex-end',
+        marginTop: -layout.spacing.s, // Pull it closer to password input
+        marginBottom: layout.spacing.s,
     } as ViewStyle,
     forgotPasswordText: {
         ...(typography.caption as TextStyle),
         fontWeight: '600',
     } as TextStyle,
     button: {
-        marginTop: layout.spacing.m,
+        height: 56, // Taller button for better tap target
+        borderRadius: layout.borderRadius.l,
+        ...layout.shadows.small,
+    } as ViewStyle,
+    dividerContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginVertical: layout.spacing.xl,
+    } as ViewStyle,
+    dividerLine: {
+        flex: 1,
+        height: 1,
+    } as ViewStyle,
+    dividerText: {
+        paddingHorizontal: layout.spacing.m,
+        ...(typography.caption as TextStyle),
+        textTransform: 'uppercase',
+        letterSpacing: 1,
+    } as TextStyle,
+    socialRow: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        gap: layout.spacing.l,
+        marginBottom: layout.spacing.xl,
+    } as ViewStyle,
+    socialButton: {
+        width: 56,
+        height: 56,
+        borderRadius: 28,
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderWidth: 1,
+        ...layout.shadows.small, // Subtle shadow for depth
     } as ViewStyle,
     footer: {
         flexDirection: 'row',
         justifyContent: 'center',
-        marginTop: layout.spacing.xl,
-        paddingBottom: 20,
+        marginTop: layout.spacing.m,
     } as ViewStyle,
     footerText: {
-        ...(typography.body2 as TextStyle),
+        ...(typography.body1 as TextStyle),
     } as TextStyle,
     linkText: {
-        ...(typography.body2 as TextStyle),
+        ...(typography.body1 as TextStyle),
         fontWeight: 'bold',
+        marginLeft: 4,
     } as TextStyle,
 });

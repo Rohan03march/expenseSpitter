@@ -1,12 +1,12 @@
 import React, { ReactNode } from 'react';
-import { View, StyleSheet, Platform, ViewStyle } from 'react-native';
+import { View, StyleSheet, Platform, ViewStyle, StyleProp } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { useTheme } from '../context/ThemeContext';
 import { layout } from '../theme/layout';
 
 interface GlassViewProps {
     children: ReactNode;
-    style?: ViewStyle;
+    style?: StyleProp<ViewStyle>;
     intensity?: number;
 }
 

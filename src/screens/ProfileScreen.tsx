@@ -44,11 +44,7 @@ export const ProfileScreen: React.FC<Props> = ({ navigation }) => {
                         <Text style={[styles.menuText, { color: colors.textPrimary }]}>Edit Profile</Text>
                         <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
                     </TouchableOpacity>
-                    <TouchableOpacity style={[styles.menuItem, { borderBottomColor: colors.border }]}>
-                        <Ionicons name="notifications-outline" size={24} color={colors.textPrimary} />
-                        <Text style={[styles.menuText, { color: colors.textPrimary }]}>Notifications</Text>
-                        <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
-                    </TouchableOpacity>
+
                     <TouchableOpacity style={[styles.menuItem, { borderBottomWidth: 0 }]}>
                         <Ionicons name="shield-checkmark-outline" size={24} color={colors.textPrimary} />
                         <Text style={[styles.menuText, { color: colors.textPrimary }]}>Privacy & Security</Text>

@@ -313,8 +313,7 @@ export const SettingsScreen: React.FC<Props> = ({ navigation }) => {
                             thumbColor={'#FFF'}
                         />
                     )}
-                    <View style={[styles.separator, { backgroundColor: colors.border }]} />
-                    {renderItem("notifications-outline", "Notifications", <Switch value={true} disabled trackColor={{ false: colors.border, true: colors.primary }} />)}
+
                 </GlassView>
 
                 {/* Account */}

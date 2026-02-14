@@ -23,7 +23,8 @@ import {
     orderBy,
     arrayUnion,
     arrayRemove,
-    deleteDoc
+    deleteDoc,
+    runTransaction
 } from 'firebase/firestore';
 import { auth, db } from '../config/firebase';
 
@@ -70,6 +71,22 @@ export interface Expense {
     type?: 'expense' | 'settlement';
 }
 
+export interface Message {
+    id: string;
+    groupId: string;
+    text: string;
+    senderId: string;
+    senderName: string;
+    avatar: string;
+    timestamp: number;
+    replyTo?: {
+        id: string;
+        text: string;
+        senderName: string;
+    };
+    reactions?: Record<string, string[]>;
+}
+
 interface FirebaseContextType {
     user: User | null;
     loading: boolean;
@@ -88,19 +105,23 @@ interface FirebaseContextType {
     addMemberToRequest: (requestId: string, userId: string) => Promise<void>; // New function
     removeMemberFromRequest: (requestId: string, userId: string) => Promise<void>; // New function
     removeMember: (groupId: string, memberId: string) => Promise<void>;
-    addExpense: (groupId: string, title: string, amount: number, paidBy: string, splitWith: string[], type?: 'expense' | 'settlement', requestId?: string) => Promise<void>; // Updated signature
-    deleteExpense: (expenseId: string) => Promise<void>;
-    getGroupExpenses: (groupId: string, requestId?: string) => Expense[]; // Updated signature
-    getGroupBalances: (groupId: string, requestId?: string) => { [userId: string]: number }; // Updated signature
+    addExpense: (groupId: string, title: string, amount: number, paidBy: string, splitWith: string[], type?: 'expense' | 'settlement', requestId?: string) => Promise<void>;
+    deleteExpense: (groupId: string, expenseId: string, requestId?: string) => Promise<void>;
+    getGroupExpenses: (groupId: string, requestId?: string) => Expense[];
+    getGroupBalances: (groupId: string, requestId?: string) => Record<string, number>;
     getGroupRequests: (groupId: string) => GroupRequest[]; // New function
-    currency: 'USD' | 'INR';
+    currency: string;
     formatCurrency: (amount: number) => string;
     toggleCurrency: () => void;
     updateUserProfile: (name: string, avatar?: string) => Promise<void>;
     changePassword: (newPassword: string) => Promise<void>;
+    sendMessage: (groupId: string, text: string, replyTo?: { id: string, senderName: string, text: string }) => Promise<void>;
+    addReaction: (messageId: string, emoji: string) => Promise<void>;
+    deleteMessage: (messageId: string) => Promise<void>;
 }
 
 export const FirebaseContext = createContext<FirebaseContextType>({} as FirebaseContextType);
+
 
 interface FirebaseProviderProps {
     children: ReactNode;
@@ -558,6 +579,70 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({ children }) 
         setCurrency(prev => prev === 'USD' ? 'INR' : 'USD');
     };
 
+    const sendMessage = async (groupId: string, text: string, replyTo?: { id: string, senderName: string, text: string }) => {
+        if (!user) return;
+
+        await addDoc(collection(db, "messages"), {
+            groupId,
+            text,
+            senderId: user.id,
+            senderName: user.name,
+            avatar: user.avatar,
+            timestamp: Date.now(),
+            replyTo: replyTo || null,
+        });
+    };
+
+    const addReaction = async (messageId: string, emoji: string) => {
+        if (!user) return;
+        const messageRef = doc(db, "messages", messageId);
+
+        try {
+            await runTransaction(db, async (transaction) => {
+                const messageDoc = await transaction.get(messageRef);
+                if (!messageDoc.exists()) return;
+
+                const data = messageDoc.data() as Message;
+                const reactions = data.reactions || {};
+
+                let wasRemoved = false;
+                // Remove user from ALL existing reactions
+                Object.keys(reactions).forEach(key => {
+                    if (reactions[key].includes(user.id)) {
+                        reactions[key] = reactions[key].filter((id: string) => id !== user.id);
+                        if (key === emoji) wasRemoved = true;
+                    }
+                });
+
+                // Add to new emoji unless we just toggled it off
+                if (!wasRemoved) {
+                    if (!reactions[emoji]) reactions[emoji] = [];
+                    reactions[emoji].push(user.id);
+                }
+
+                // Cleanup empty keys
+                Object.keys(reactions).forEach(key => {
+                    if (reactions[key].length === 0) {
+                        delete reactions[key];
+                    }
+                });
+
+                transaction.update(messageRef, { reactions });
+            });
+        } catch (e) {
+            console.error("Transaction failed: ", e);
+        }
+    };
+
+    const deleteMessage = async (messageId: string) => {
+        if (!user) return;
+        try {
+            await deleteDoc(doc(db, "messages", messageId));
+        } catch (error) {
+            console.error("Error deleting message:", error);
+        }
+    };
+
     return (
         <FirebaseContext.Provider value={{
             user,
@@ -586,7 +671,10 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({ children }) 
             formatCurrency,
             toggleCurrency,
             updateUserProfile,
-            changePassword
+            changePassword,
+            sendMessage,
+            addReaction,
+            deleteMessage,
         }}>
             {children}
         </FirebaseContext.Provider>

@@ -138,14 +138,9 @@ export const GroupDashboardScreen: React.FC<Props> = ({ route, navigation }) => 
                     <Ionicons name="arrow-back" size={24} color={colors.textPrimary} />
                 </TouchableOpacity>
                 <Text style={[styles.headerTitle, { color: colors.textPrimary }]} numberOfLines={1}>{requestTitle ? `${group.name} - ${requestTitle}` : group.name}</Text>
-                <View style={{ flexDirection: 'row' }}>
-                    <TouchableOpacity onPress={() => navigation.navigate('Chat', { group })} style={styles.iconButton}>
-                        <Ionicons name="chatbubble-outline" size={24} color={colors.textPrimary} />
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={() => navigation.navigate('Settings')} style={styles.iconButton}>
-                        <Ionicons name="settings-outline" size={24} color={colors.textPrimary} />
-                    </TouchableOpacity>
-                </View>
+                <TouchableOpacity onPress={() => navigation.navigate('Settings')} style={styles.iconButton}>
+                    <Ionicons name="settings-outline" size={24} color={colors.textPrimary} />
+                </TouchableOpacity>
             </View>
 
             <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} keyboardDismissMode="on-drag">
@@ -197,6 +192,22 @@ export const GroupDashboardScreen: React.FC<Props> = ({ route, navigation }) => 
                         >
                             <Ionicons name="wallet-outline" size={24} color="#FFF" />
                             <Text style={styles.actionLabel}>Balances</Text>
+                        </LinearGradient>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={styles.actionBtnContainer}
+                        onPress={() => navigation.navigate('Chat', { group })}
+                        activeOpacity={0.8}
+                    >
+                        <LinearGradient
+                            colors={gradients.primary as any}
+                            style={styles.actionBtn}
+                            start={{ x: 0, y: 0 }}
+                            end={{ x: 1, y: 1 }}
+                        >
+                            <Ionicons name="chatbubble-ellipses-outline" size={24} color="#FFF" />
+                            <Text style={styles.actionLabel}>Chat</Text>
                         </LinearGradient>
                     </TouchableOpacity>
 
@@ -389,18 +400,20 @@ export const GroupDashboardScreen: React.FC<Props> = ({ route, navigation }) => 
 
             </ScrollView >
 
-            {(!requestId || (requestId && groupRequests.find(r => r.id === requestId)?.createdBy === currentUser?.id)) && (
-                <TouchableOpacity
-                    style={[styles.fab, { backgroundColor: colors.primary }]}
-                    onPress={() => {
-                        const currentRequest = requestId ? groupRequests.find(r => r.id === requestId) : null;
-                        const requestMemberIds = currentRequest ? currentRequest.memberIds : null;
-                        navigation.navigate('AddExpense', { group, requestId, requestMemberIds });
-                    }}
-                >
-                    <Ionicons name="add" size={32} color="#FFF" />
-                </TouchableOpacity>
-            )}
+            {
+                (!requestId || (requestId && groupRequests.find(r => r.id === requestId)?.createdBy === currentUser?.id)) && (
+                    <TouchableOpacity
+                        style={[styles.fab, { backgroundColor: colors.primary }]}
+                        onPress={() => {
+                            const currentRequest = requestId ? groupRequests.find(r => r.id === requestId) : null;
+                            const requestMemberIds = currentRequest ? currentRequest.memberIds : null;
+                            navigation.navigate('AddExpense', { group, requestId, requestMemberIds });
+                        }}
+                    >
+                        <Ionicons name="add" size={32} color="#FFF" />
+                    </TouchableOpacity>
+                )
+            }
 
             {
                 showAddMemberModal && (
@@ -572,13 +585,17 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        paddingVertical: layout.spacing.m,
+        paddingVertical: 12, // Slightly reduced padding
+        paddingHorizontal: 8, // Added small horizontal padding to contain content
         borderRadius: layout.borderRadius.m,
-        gap: layout.spacing.s,
+        gap: 6, // Reduced gap
+        height: 'auto', // Allow content to determine height
     } as ViewStyle,
     actionLabel: {
         ...(typography.button as TextStyle),
         color: '#FFF',
+        fontSize: 13, // Slightly smaller text to fit
+        textAlign: 'center',
     },
     sectionTitle: {
         ...(typography.h3 as TextStyle),

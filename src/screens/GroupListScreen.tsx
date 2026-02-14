@@ -99,7 +99,25 @@ export const GroupListScreen: React.FC<Props> = ({ navigation }) => {
                         <View style={styles.groupInfo}>
                             <Text style={[styles.groupName, { color: colors.textPrimary }]}>{item.name}</Text>
                             <Text style={[styles.settledText, { color: colors.textSecondary }]}>My Total Spend: {formatCurrency(Math.max(0, displayAmount))}</Text>
+
+                            <TouchableOpacity
+                                onPress={() => navigation.navigate('Chat', { group: item })}
+                                activeOpacity={0.8}
+                                style={{ marginTop: 12, alignSelf: 'flex-start' }}
+                            >
+                                <LinearGradient
+                                    colors={['rgba(99, 102, 241, 0.25)', 'rgba(99, 102, 241, 0.05)']}
+                                    start={{ x: 0, y: 0 }}
+                                    end={{ x: 1, y: 1 }}
+                                    style={styles.groupChatButton}
+                                >
+                                    <Ionicons name="chatbubble-ellipses-outline" size={16} color={colors.primaryLight || '#818CF8'} style={{ marginRight: 6 }} />
+                                    <Text style={[styles.groupChatText, { color: colors.primaryLight || '#818CF8' }]}>Group Chat</Text>
+                                    <Ionicons name="arrow-forward" size={14} color={colors.primaryLight || '#818CF8'} style={{ marginLeft: 4, opacity: 0.8 }} />
+                                </LinearGradient>
+                            </TouchableOpacity>
                         </View>
+
                         <View style={styles.arrowContainer}>
                             <Ionicons name="chevron-forward" size={20} color={colors.textSecondary} />
                         </View>
@@ -220,6 +238,21 @@ const styles = StyleSheet.create({
         backgroundColor: 'rgba(255,255,255,0.05)',
         borderRadius: layout.borderRadius.s,
     } as ViewStyle,
+    groupChatButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 8,
+        paddingHorizontal: 16,
+        borderRadius: 20,
+        borderWidth: 1,
+        borderColor: 'rgba(99, 102, 241, 0.3)',
+    } as ViewStyle,
+    groupChatText: {
+        ...typography.caption,
+        fontWeight: '700',
+        letterSpacing: 0.5,
+        fontSize: 13,
+    } as TextStyle,
     fabContainer: {
         position: 'absolute',
         bottom: layout.spacing.xl,

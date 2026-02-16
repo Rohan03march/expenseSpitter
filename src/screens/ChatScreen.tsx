@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, ViewStyl
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { collection, query, where, orderBy, onSnapshot } from 'firebase/firestore';
+import { collection, query, where, orderBy, onSnapshot, doc, setDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { ScreenWrapper } from '../components/ScreenWrapper';
 import TravelBackground from '../components/TravelBackground';
@@ -106,6 +106,66 @@ export const ChatScreen: React.FC<Props> = ({ navigation, route }) => {
         return () => unsubscribe();
     }, [group.id]);
 
+    // --- Typing Indicator Logic ---
+    const [typingUsers, setTypingUsers] = useState<string[]>([]);
+    const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+    // Listen for other users typing
+    useEffect(() => {
+        if (!user) return;
+
+        const typingQuery = query(collection(db, "groups", group.id, "typing"));
+        const unsubscribe = onSnapshot(typingQuery, (snapshot) => {
+            const now = Date.now();
+            const activeTypers: string[] = [];
+
+            snapshot.forEach(doc => {
+                if (doc.id !== user.id) {
+                    const data = doc.data();
+                    // Filter out stale typing status (> 5 seconds old)
+                    if (data.isTyping && (now - data.timestamp < 5000)) {
+                        activeTypers.push(data.name);
+                    }
+                }
+            });
+            setTypingUsers(activeTypers);
+        });
+
+        return () => unsubscribe();
+    }, [group.id, user]);
+
+    // Update my typing status
+    const updateTypingStatus = async (isTyping: boolean) => {
+        if (!user) return;
+        const typingRef = doc(db, "groups", group.id, "typing", user.id);
+
+        if (isTyping) {
+            await setDoc(typingRef, {
+                isTyping: true,
+                name: user.name,
+                timestamp: Date.now()
+            });
+
+            // Auto-clear typing status after 5 seconds of inactivity
+            if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+            typingTimeoutRef.current = setTimeout(() => {
+                updateTypingStatus(false);
+            }, 5000);
+        } else {
+            if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+            await deleteDoc(typingRef); // Or set isTyping: false
+        }
+    };
+
+    const handleInputChange = (text: string) => {
+        setInputText(text);
+        if (text.length > 0) {
+            updateTypingStatus(true);
+        } else {
+            updateTypingStatus(false);
+        }
+    };
+
     const [selectedMessage, setSelectedMessage] = useState<Message | null>(null);
 
     const MINUTE_MS = 60000;
@@ -132,6 +192,7 @@ export const ChatScreen: React.FC<Props> = ({ navigation, route }) => {
         const currentReply = replyTo; // Capture current reply state
 
         setInputText(''); // Clear immediately
+        updateTypingStatus(false); // Clear typing status
         setReplyTo(null); // Clear reply state
 
         try {
@@ -338,6 +399,20 @@ export const ChatScreen: React.FC<Props> = ({ navigation, route }) => {
                         />
                     )}
 
+                    {/* Typing Indicator */}
+                    {typingUsers.length > 0 && (
+                        <View style={styles.typingIndicatorContainer}>
+                            <Text style={[styles.typingText, { color: colors.textSecondary }]}>
+                                {typingUsers.length === 1
+                                    ? `${typingUsers[0]} is typing...`
+                                    : typingUsers.length === 2
+                                        ? `${typingUsers[0]} and ${typingUsers[1]} are typing...`
+                                        : `${typingUsers.length} people are typing...`}
+                            </Text>
+                            {/* Optional: Add a small animation dots here if desired */}
+                        </View>
+                    )}
+
                     {/* Reply Preview Bar */}
                     {replyTo && (
                         <View style={[styles.replyPreviewBar, { backgroundColor: colors.surface, borderTopColor: colors.border }]}>
@@ -361,7 +436,7 @@ export const ChatScreen: React.FC<Props> = ({ navigation, route }) => {
                                 placeholder="Message..."
                                 placeholderTextColor={colors.textSecondary}
                                 value={inputText}
-                                onChangeText={setInputText}
+                                onChangeText={handleInputChange}
                                 multiline
                             />
                             <TouchableOpacity
@@ -667,4 +742,13 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
     } as ViewStyle,
+    typingIndicatorContainer: {
+        paddingHorizontal: 16,
+        paddingVertical: 4,
+        alignItems: 'flex-start',
+    } as ViewStyle,
+    typingText: {
+        fontSize: 12,
+        fontStyle: 'italic',
+    } as TextStyle,
 });
